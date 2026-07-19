@@ -220,6 +220,22 @@ const ProductDetails: React.FC = () => {
   const [settings, setSettings] = useState<any>(null);
   const [notifying, setNotifying] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userName, setUserName] = useState<string>("");
+
+  const getGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 4) {
+      return "Time to sleep";
+    } else if (hours < 12) {
+      return "Good Morning";
+    } else if (hours < 17) {
+      return "Good Afternoon";
+    } else if (hours < 21) {
+      return "Good Evening";
+    } else {
+      return "Good Night";
+    }
+  };
 
   const getActualCoinReward = (p: any): number => {
     if (!p) return 0;
@@ -278,6 +294,7 @@ const ProductDetails: React.FC = () => {
         getDoc(doc(db, "users", user.uid)).then((d) => {
           if (d.exists()) {
             const data = d.data();
+            setUserName(data.displayName || data.shopName || data.name || user.displayName || user.email?.split("@")[0] || "User");
             if (data.isAffiliate && data.affiliateCode) {
               setAffiliateCode(data.affiliateCode);
             }
@@ -291,9 +308,12 @@ const ProductDetails: React.FC = () => {
             ) {
               setIsAdmin(true);
             }
+          } else {
+            setUserName(user.displayName || user.email?.split("@")[0] || "User");
           }
         });
       } else {
+        setUserName("");
         setAffiliateCode(null);
         setIsAdmin(false);
       }
@@ -947,8 +967,21 @@ const ProductDetails: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-between items-center mb-6">
-            <div /> {/* Spacer */}
+          {/* Time-Based Dynamic Greeting & Share */}
+          <div className="flex justify-between items-center mb-6 gap-4">
+            {/* Time-Based Dynamic Greeting */}
+            <div className="pGV flex items-center gap-2.5 px-4 py-2 bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/55 dark:border-zinc-800/80 rounded-[12px] w-fit text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm font-bold shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 shrink-0">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" x2="9.01" y1="9" y2="9"/>
+                <line x1="15" x2="15.01" y1="9" y2="9"/>
+              </svg>
+              <span>
+                {getGreeting()}, <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{userName || "Guest"}</span>
+              </span>
+            </div>
+
             <div className="flex items-center gap-2 relative z-20">
               <Button
                 onClick={() => {
@@ -1273,6 +1306,16 @@ const ProductDetails: React.FC = () => {
                     </Button>
                   </div>
                 </div>
+              </div>
+
+              {/* Product Policy Notes */}
+              <div className="space-y-4 mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                <p className="note">
+                  <strong>Authenticity Guarantee:</strong> This product is 100% authentic, verified, and sourced directly from official channels by DEEP SHOP.
+                </p>
+                <p className="note wr">
+                  <strong>Strict Return Policy:</strong> Since this is a Border Cross product, returns and refunds are strictly subject to physical damage verification upon unboxing. Please record an unboxing video as proof.
+                </p>
               </div>
 
               {/* FAQ Section */}

@@ -292,7 +292,7 @@ export function Header() {
       });
     });
 
-    if (open) {
+    if (open && typeof window !== "undefined" && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -302,6 +302,12 @@ export function Header() {
       if (unsubscribeChats) unsubscribeChats();
       document.body.style.overflow = "";
     };
+  }, [open]);
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent("toggleSidebar", { detail: open }),
+    );
   }, [open]);
 
   let headerBgClass = "bg-transparent border-transparent";
@@ -332,9 +338,6 @@ export function Header() {
                 navigate(-1);
               } else {
                 setOpen(!open);
-                window.dispatchEvent(
-                  new CustomEvent("toggleSidebar", { detail: !open }),
-                );
               }
             }}
             className="flex items-center justify-center transition-all w-10 h-10 border-transparent shadow-none rounded-full shrink-0"
@@ -494,11 +497,12 @@ export function Header() {
       <MobileMenu
         open={open}
         onClose={() => setOpen(false)}
-        className="flex flex-col justify-between gap-2 overflow-y-auto bg-white dark:bg-zinc-900 pb-20 md:pb-4 border-l md:border-l-0 md:border-r border-zinc-200 dark:border-zinc-800 no-scrollbar"
+        className="bg-white dark:bg-zinc-900 border-l md:border-l-0 md:border-r border-zinc-200 dark:border-zinc-800"
       >
-        <div className="max-w-full block">
+        {/* Top scrollable links and categories */}
+        <div className="flex-1 overflow-y-auto no-scrollbar w-full">
           <div className="flex w-full flex-col gap-y-2 pb-4">
-            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-4 mt-4 mb-2">
+            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-4 mt-4 mb-2 block">
               {isAdmin ? "Admin Pages" : "Explore Pages"}
             </span>
             {linksToShow.map((link) => (
@@ -515,10 +519,10 @@ export function Header() {
 
             {!isAdmin && categories.length > 0 && (
               <>
-                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-4 mt-6 mb-2">
+                <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-4 mt-6 mb-2 block">
                   Categories
                 </span>
-                <div className="grid grid-cols-2 gap-2 px-2">
+                <div className="flex flex-row flex-nowrap overflow-x-auto gap-2 px-4 no-scrollbar scroll-smooth pb-2 w-full max-w-full">
                   {categories.map((cat, i) => (
                     <NavLink
                       key={i}
@@ -527,7 +531,7 @@ export function Header() {
                         triggerHaptic();
                         setOpen(false);
                       }}
-                      className="px-3 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+                      className="px-3.5 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition font-medium shrink-0"
                     >
                       {cat}
                     </NavLink>
@@ -537,7 +541,9 @@ export function Header() {
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-2 p-4 mt-auto border-t border-zinc-100 dark:border-zinc-800 w-full mb-4">
+
+        {/* Bottom actions sticky */}
+        <div className="flex flex-col gap-2 p-4 border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 w-full shrink-0 pb-6 md:pb-4">
           {isAdmin && (
             <Button
               variant="outline"
@@ -613,7 +619,7 @@ function MobileMenu({ open, children, onClose, className, ...props }: MobileMenu
     <>
       <div 
         className={cn(
-          "fixed inset-0 z-[110] bg-black/20 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300",
+          "fixed inset-0 z-[150000] bg-black/20 dark:bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -622,10 +628,12 @@ function MobileMenu({ open, children, onClose, className, ...props }: MobileMenu
         id="mobile-menu"
         data-slot={open ? "open" : "closed"}
         className={cn(
-          "bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800",
-          "fixed top-0 bottom-0 z-[115] flex flex-col overflow-hidden shadow-2xl pt-14 md:pt-16",
-          "md:left-0 md:w-64", // desktop
-          "left-0 w-full md:max-w-xs", // mobile takes full width
+          "bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800",
+          "fixed z-[150100] md:z-[110] flex flex-col overflow-hidden shadow-2xl md:shadow-none",
+          // Mobile view floating styles:
+          "top-4 bottom-4 left-4 w-72 rounded-[20px] pt-4 pb-4",
+          // Desktop view overrides:
+          "md:top-0 md:bottom-0 md:left-0 md:w-72 md:rounded-none md:border-r md:border-l-0 md:border-t-0 md:border-b-0 md:pt-16 md:pb-4 md:border-zinc-200 md:dark:border-zinc-800",
           // Slide in from left on both mobile and desktop.
           "data-[slot=open]:animate-in data-[slot=closed]:animate-out ease-out duration-300",
           "data-[slot=open]:slide-in-from-left-full data-[slot=closed]:slide-out-to-left-full",
@@ -633,7 +641,7 @@ function MobileMenu({ open, children, onClose, className, ...props }: MobileMenu
         )}
         {...props}
       >
-        <div className="size-full h-full overflow-y-auto no-scrollbar">
+        <div className="w-full h-full flex flex-col overflow-hidden">
           {children}
         </div>
       </div>

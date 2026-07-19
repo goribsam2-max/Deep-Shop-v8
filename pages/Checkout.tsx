@@ -1177,6 +1177,16 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
+                  {/* Checkout Policy Notes */}
+                  <div className="space-y-4 mb-6 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                    <p className="note">
+                      <strong>Delivery Notice:</strong> Fast nationwide shipping takes 1-3 business days inside Dhaka, and 3-5 business days outside Dhaka.
+                    </p>
+                    <p className="note wr">
+                      <strong>Important Warning:</strong> Mismatched transaction details or wrong IDs will result in immediate order cancellation. Recording an unboxing video is mandatory for returns.
+                    </p>
+                  </div>
+
                   <div className="flex items-start gap-3 border-t border-zinc-100 dark:border-zinc-800 pt-6">
                     <Checkbox
                       id="terms"

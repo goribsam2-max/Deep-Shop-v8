@@ -337,8 +337,8 @@ const SmallCreatorsHub: React.FC<{ userData: UserProfile }> = ({ userData }) => 
                 <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-4">
                   Once your video reaches at least <strong>1,000 views</strong>, submit its link in the form. Our team will verify the video view count and check if our website link is in the description/comment, then instantly add the money to your Wallet!
                 </p>
-                <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold bg-orange-100/50 dark:bg-orange-900/30 px-3 py-2 rounded-lg inline-block">
-                  Note: Payout is {formatPrice(10)} per 1k views. Unlimited videos allowed!
+                <p className="note mt-2">
+                  <strong>Payout Rate:</strong> Payout is {formatPrice(10)} per 1k views. Unlimited videos allowed!
                 </p>
               </div>
             </div>

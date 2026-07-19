@@ -104,6 +104,85 @@ html, body {
   --linkB: #3b82f6;
 }
 
+/* Wave Animation & Premium Footer Styles */
+:root {
+  --waveB: #bfdbfe; /* Beautiful light blue wave contrast */
+  --fotB: #ffffff;
+  --fotT: #4b5563;
+  --fotL: #e5e7eb;
+}
+
+.dark, .drK {
+  --waveB: #1e293b; /* Beautiful slate blue wave contrast in dark mode */
+  --fotB: #09090b;
+  --fotT: #9ca3af;
+  --fotL: #1f2937;
+}
+
+.wvC {
+  position: relative;
+  width: 100%;
+  z-index: 10;
+  overflow: hidden;
+  background: transparent;
+  margin-top: 20px;
+}
+
+.wvS {
+  position: relative;
+  width: 100%;
+  height: 60px;
+}
+
+.wvS .waves {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  min-height: 40px;
+  max-height: 80px;
+}
+
+.wvH {
+  position: relative;
+  height: 10px;
+  background: var(--waveB);
+}
+
+.plx > use {
+  fill: var(--waveB);
+  animation: waveMove 25s cubic-bezier(.55,.5,.45,.5) infinite;
+}
+
+.plx > use:nth-child(1) {
+  opacity: .7;
+  animation-delay: -2s;
+  animation-duration: 7s;
+}
+
+.plx > use:nth-child(2) {
+  opacity: .5;
+  animation-delay: -3s;
+  animation-duration: 10s;
+}
+
+.plx > use:nth-child(3) {
+  opacity: .3;
+  animation-delay: -4s;
+  animation-duration: 13s;
+}
+
+.plx > use:nth-child(4) {
+  opacity: 1;
+  animation-delay: -5s;
+  animation-duration: 20s;
+}
+
+@keyframes waveMove {
+  0% { transform: translate3d(-90px, 0, 0); }
+  100% { transform: translate3d(85px, 0, 0); }
+}
+
 /* Base selection and highlights */
 ::selection {
   color: #ffffff;
@@ -136,6 +215,59 @@ svg.line .svgC {
 .dark svg.line .svgC, .drK svg.line .svgC {
   fill: none !important;
   stroke: var(--darkU) !important;
+}
+
+/* XML Note Style definitions with complete dark mode support */
+.note {
+  position: relative;
+  padding: 16px 20px 16px 50px;
+  background: #e8f0fe;
+  color: #272eb5;
+  font-size: .85rem;
+  line-height: 1.6em;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.note::before {
+  content: '';
+  width: 60px;
+  height: 60px;
+  background: rgba(0,0,0,.2);
+  display: block;
+  border-radius: 50%;
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  opacity: .1;
+}
+.note::after {
+  content: '*';
+  position: absolute;
+  left: 18px;
+  top: 16px;
+  font-size: 20px;
+  min-width: 15px;
+  text-align: center;
+}
+.note.wr {
+  background: #fbe4ea;
+  color: #9c0715;
+}
+.note.wr::after {
+  content: '!';
+}
+
+/* Dark mode variations for XML note styles */
+.dark .note, .drK .note {
+  background: #172554 !important;
+  color: #93c5fd !important;
+}
+.dark .note::before, .drK .note::before {
+  background: rgba(255,255,255,.1) !important;
+}
+.dark .note.wr, .drK .note.wr {
+  background: #450a0a !important;
+  color: #fca5a5 !important;
 }
 
 

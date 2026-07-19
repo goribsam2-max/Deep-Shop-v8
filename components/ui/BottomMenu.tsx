@@ -262,7 +262,7 @@ const BottomMenu = () => {
   return (
     <div
       ref={containerRef}
-      className={cn("fixed bottom-2 left-2 right-2 sm:left-5 sm:right-5 z-[100] flex items-end justify-between md:hidden gap-1.5 sm:gap-3 pointer-events-none mb-[env(safe-area-inset-bottom)]")}
+      className={cn("fixed bottom-2 left-2 right-2 sm:left-5 sm:right-5 z-[100] flex items-center justify-between md:hidden gap-1.5 sm:gap-3 pointer-events-none mb-[env(safe-area-inset-bottom)]")}
     >
       {/* Hidden for measurement */}
       <div
@@ -356,17 +356,17 @@ const BottomMenu = () => {
       </AnimatePresence>
 
       {/* Main Nav Container */}
-      <div className="flex-1 relative pointer-events-auto">
+      <div className="flex-1 relative pointer-events-auto h-[60px] flex items-center">
 
         {/* Floating Toolbar */}
-        <div className="w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-1.5 flex items-center justify-around px-1 sm:px-2 shadow-2xl relative rounded-full">
+        <div className="w-full h-[60px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-around px-1 sm:px-2 shadow-2xl relative rounded-full">
           {MAIN_NAV.map(({ icon: IconName, name }) => {
             const isActive = view === name || (name === 'home' && location.pathname === '/');
             return (
               <button
                 key={name}
                 className={cn(
-                  "relative px-1.5 sm:px-3 py-1 rounded-full transition-all active:scale-95 flex flex-col items-center justify-center gap-[2px] flex-1 max-w-[68px]",
+                  "relative py-1 flex items-center justify-center flex-1 transition-all active:scale-95",
                   isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
                 )}
                 onClick={() => {
@@ -384,16 +384,18 @@ const BottomMenu = () => {
                   }
                 }}
               >
-                {isActive && (
-                   <motion.div layoutId="nav-pill" className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800/80 rounded-full -z-10" />
-                )}
-                <Icon
-                  name={IconName}
-                  className={cn("relative z-10 transition-colors mb-0.5 w-[20px] h-[20px]", isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 dark:text-zinc-400")}
-                />
-                <span className={cn("text-[9px] font-semibold z-10 capitalize", isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 dark:text-zinc-400")}>
-                  {t(name)}
-                </span>
+                <div className="relative flex flex-col items-center justify-center px-4 py-1.5 rounded-[50px] transition-all">
+                  {isActive && (
+                     <motion.div layoutId="nav-pill" className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800/80 rounded-[50px] -z-10" />
+                  )}
+                  <Icon
+                    name={IconName}
+                    className={cn("relative z-10 transition-colors mb-0.5 w-[20px] h-[20px]", isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 dark:text-zinc-400")}
+                  />
+                  <span className={cn("relative z-10 text-[9.5px] font-bold capitalize whitespace-nowrap", isActive ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500 dark:text-zinc-400")}>
+                    {t(name)}
+                  </span>
+                </div>
               </button>
             );
           })}
@@ -401,7 +403,7 @@ const BottomMenu = () => {
       </div>
 
       {/* Floating Profile / Auth Button */}
-      <div className="pointer-events-auto">
+      <div className="pointer-events-auto h-[60px] flex items-center">
         {user ? (
           <button
             onClick={() => {
@@ -424,7 +426,7 @@ const BottomMenu = () => {
             className="w-[60px] h-[60px] rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl flex items-center justify-center transition-transform active:scale-95 hover:bg-zinc-50 dark:hover:bg-zinc-800/80"
           >
             <div className="w-[44px] h-[44px] rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-inner hover:bg-indigo-600 transition-colors m-auto flex-shrink-0">
-              <ArrowRight className="text-white w-5 h-5" />
+              <ArrowRight className="text-white w-5.5 h-5.5" />
             </div>
           </button>
         )}
