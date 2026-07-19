@@ -4,6 +4,7 @@ import { collection, query, documentId, where, getDocs } from "firebase/firestor
 import { db, auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { Ticket } from "lucide-react";
+import { useIllustrations } from "../lib/useIllustrations";
 
 export default function MyCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);

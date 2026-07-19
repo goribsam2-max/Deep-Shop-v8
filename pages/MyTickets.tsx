@@ -4,6 +4,7 @@ import { db, auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { HelpTicket } from "../types";
+import { useIllustrations } from "../lib/useIllustrations";
 
 const MyTickets: React.FC = () => {
   const [tickets, setTickets] = useState<HelpTicket[]>([]);
