@@ -20,8 +20,7 @@ const PaymentSuccess: React.FC = () => {
         Order Confirmed!
       </h1>
       <p className="text-zinc-500 text-sm mb-12 px-10">
-        Your tech essentials are being prepared for delivery via Steadfast
-        Courier.
+        Your tech essentials are being prepared for delivery.
       </p>
 
       <div className="w-full space-y-4">

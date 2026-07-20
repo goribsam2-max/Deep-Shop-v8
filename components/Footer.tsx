@@ -43,8 +43,8 @@ export const Footer = () => {
       <div className="relative mx-[-1.25rem] md:mx-[-3rem] w-[calc(100%+2.5rem)] md:w-[calc(100%+6rem)] overflow-hidden pb-16 pt-12">
         
         {/* Floating Transition Wave Animation - XML Style & Flowing underneath/paka spaces */}
-        <div className="absolute bottom-0 left-0 right-0 w-full z-0 h-[130px] pointer-events-none overflow-hidden">
-          <svg className="waves w-full h-[100px]" preserveAspectRatio="none" shapeRendering="auto" viewBox="0 24 150 28">
+        <div className="absolute bottom-0 left-0 right-0 w-full z-0 h-[130px] pointer-events-none overflow-hidden flex flex-col justify-end">
+          <svg className="waves w-full h-[100px] block" preserveAspectRatio="none" shapeRendering="auto" viewBox="0 24 150 28" style={{ marginBottom: '-1px' }}>
             <defs>
                <path d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" id="wave-bg" />
             </defs>
@@ -55,11 +55,11 @@ export const Footer = () => {
               <use href="#wave-bg" x="48" y="7" />
             </g>
           </svg>
-          <div className="wvH h-[30px]" />
+          <div className="wvH w-full block" style={{ height: '32px', marginTop: '-1.5px' }} />
         </div>
 
         {/* Floating rounded container layout with left, right, and bottom spacing (paka side & niche) */}
-        <div className="relative z-10 px-4 sm:px-6 md:px-8 mb-24">
+        <div className="relative z-10 px-4 sm:px-6 md:px-8 mb-6 sm:mb-8">
           <footer className="w-full max-w-7xl mx-auto bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md text-[var(--fotT)] border-[0.5px] border-zinc-200/35 dark:border-zinc-900/30 rounded-[32px] overflow-hidden shadow-xl p-6 md:p-10">
             <div className="max-w-7xl mx-auto">
               

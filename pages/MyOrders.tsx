@@ -90,7 +90,7 @@ const MyOrders: React.FC = () => {
   const [exchanges, setExchanges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(Date.now());
-  const [activeTab, setActiveTab] = useState<"Pending" | "Active" | "Cancelled" | "Custom Pay / Exchange">("Pending");
+  const [activeTab, setActiveTab] = useState<"Pending" | "Active" | "Cancelled" | "Custom/Exchange">("Pending");
   const navigate = useNavigate();
   const illustrations = useIllustrations();
   const notify = useNotify();
@@ -181,11 +181,11 @@ const MyOrders: React.FC = () => {
       </div>
 
       <div className="flex bg-white dark:bg-zinc-900 rounded-[24px] p-1.5 mb-8 border border-zinc-100 dark:border-zinc-800 shadow-sm gap-1 overflow-x-auto no-scrollbar">
-        {["Pending", "Active", "Cancelled", "Custom Pay / Exchange"].map((tab) => (
+        {["Pending", "Active", "Cancelled", "Custom/Exchange"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 min-w-[70px] whitespace-nowrap text-center py-2.5 px-4 rounded-full text-xs md:text-sm font-bold transition-all ${
+            className={`grow shrink-0 min-w-[80px] whitespace-nowrap text-center py-2 px-3 sm:px-4 rounded-full text-xs sm:text-sm font-bold transition-all ${
               activeTab === tab
                 ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-md"
                 : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 bg-transparent"
@@ -196,7 +196,7 @@ const MyOrders: React.FC = () => {
         ))}
       </div>
 
-      {activeTab === "Custom Pay / Exchange" ? (
+      {activeTab === "Custom/Exchange" ? (
         <div className="space-y-8 animate-fade-in">
           {/* Custom Payments Section */}
           <div className="space-y-4">

@@ -23,6 +23,16 @@ const translations: Record<Language, Record<string, string>> = {
     'accepted_payments': 'Accepted Payments',
     'privacy_policy': 'Privacy Policy',
     'terms': 'Terms of Service',
+    'customer_support': 'Customer Support',
+    'policies': 'Policies',
+    'faqs': 'FAQs',
+    'help_center': 'Help Center',
+    'my_tickets': 'My Support Tickets',
+    'about_us': 'About Us',
+    'terms_conditions': 'Terms & Conditions',
+    'refund_policy': 'Refund Policy',
+    'shipping_policy': 'Shipping Policy',
+    'cookie_policy': 'Cookie Policy',
   },
   bn: {
     'home': 'হোম',
@@ -37,6 +47,16 @@ const translations: Record<Language, Record<string, string>> = {
     'accepted_payments': 'গ্রহণযোগ্য পেমেন্ট',
     'privacy_policy': 'গোপনীয়তা নীতি',
     'terms': 'শর্তাবলী',
+    'customer_support': 'গ্রাহক সহায়তা',
+    'policies': 'পলিসি সমূহ',
+    'faqs': 'জিজ্ঞাসা (FAQs)',
+    'help_center': 'সহায়তা কেন্দ্র',
+    'my_tickets': 'আমার সাপোর্ট টিকিট',
+    'about_us': 'আমাদের সম্পর্কে',
+    'terms_conditions': 'নিয়ম ও শর্তাবলী',
+    'refund_policy': 'রিফান্ড নীতি',
+    'shipping_policy': 'শিপিং নীতি',
+    'cookie_policy': 'কুকি নীতি',
     'Sign In Required': 'সাইন ইন আবশ্যক',
     'Please login to view and manage your saved tech essentials.': 'আপনার সংরক্ষিত প্রযুক্তি পণ্যগুলি দেখতে এবং পরিচালনা করতে অনুগ্রহ করে লগইন করুন।',
     'Sign In Now': 'এখনই সাইন ইন করুন',
@@ -81,7 +101,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    const val = translations[language][key];
+    if (val) return val;
+    // Fallback: If translation is missing but it's snake_case, format beautifully
+    if (key.includes('_')) {
+      return key
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    return key;
   };
 
   return (

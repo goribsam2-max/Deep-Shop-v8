@@ -421,6 +421,8 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
                  <NewMenuItem icon="user" label="My Profile" color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" onClick={() => navigate('/profile/edit')} />
                  <NewMenuItem icon="users" label="Saved Accounts / Switch" color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" onClick={() => window.dispatchEvent(new CustomEvent('openAccountCenter'))} />
                  <NewMenuItem icon="lock" label="Change Password" color="text-[#EF8020]" bg="bg-orange-50 dark:bg-orange-900/20" onClick={() => navigate('/settings/password')} />
+                 <NewMenuItem icon={<FingerprintIcon className="w-5 h-5" />} label="Biometric & Passcode Lock" color="text-teal-500" bg="bg-teal-50 dark:bg-teal-900/20" onClick={() => navigate('/settings/biometrics')} />
+                 <NewMenuItem icon={<Shield className="w-5 h-5" />} label="Where you are logged in" color="text-emerald-500" bg="bg-emerald-50 dark:bg-emerald-900/20" onClick={() => navigate('/devices')} />
               </div>
           </div>
           
@@ -517,6 +519,26 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
     </div>
   );
 };
+
+const FingerprintIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M2 12a10 10 0 0 1 18-6" />
+    <path d="M5 19.5A10 10 0 0 1 18 10" />
+    <path d="m11 22 .5-1.5a10 10 0 0 1 13.9-6" />
+    <path d="M14 22a7 7 0 0 0 5-5" />
+    <path d="M8 15a5 5 0 0 1 8-4" />
+    <path d="M9 19a5 5 0 0 0 3-4" />
+  </svg>
+);
 
 function NewMenuItem({ icon, label, color, bg, onClick }: { icon: React.ReactNode | string, label: string, color: string, bg: string, onClick: () => void }) {
     return (

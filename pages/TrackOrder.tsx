@@ -190,7 +190,7 @@ const TrackOrder: React.FC = () => {
           />
           <Step
             label="Handed to Courier"
-            sub="Sent via Steadfast Courier."
+            sub="Sent via Courier."
             active={[
               OrderStatus.DELIVER_ON_COURIER,
               OrderStatus.ON_THE_WAY,

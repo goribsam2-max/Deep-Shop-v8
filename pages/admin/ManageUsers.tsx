@@ -546,12 +546,12 @@ const ManageUsers: React.FC = () => {
                 <div className="flex items-center gap-2 text-xs font-medium text-neutral-500 dark:text-neutral-400">
                   <span>{user.email}</span>
                   <span>•</span>
-                  <span>IP: {user.ipAddress || "UNKNOWN"}</span>
+                  <span>IP: {user.ipAddress || (user.sessions?.find((s: any) => s.ip)?.ip) || "UNKNOWN"}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2 pr-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <button
                 onClick={() => setDetailModal({ isOpen: true, user })}
                 className="flex items-center justify-center size-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"

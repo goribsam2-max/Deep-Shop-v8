@@ -711,7 +711,7 @@ const SellerDashboard: React.FC = () => {
               </span>
             )}
           </div>
-          <span className={`text-[10px] font-bold tracking-tight transition-all duration-300 ${isActive ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`}>
+          <span className={`text-[10px] font-bold tracking-tight whitespace-nowrap transition-all duration-300 ${isActive ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`}>
             {label}
           </span>
         </div>
@@ -1262,7 +1262,7 @@ const SellerDashboard: React.FC = () => {
                       </div>
 
                       {/* Tracking ID update for Shipped / On Courier orders */}
-                      {(order.status === OrderStatus.ON_THE_WAY || order.status === "Deliver on Courier" || order.status === "On Courier / Shipped") && (
+                      {(order.status === OrderStatus.ON_THE_WAY || order.status === "On Courier / Shipped") && (
                         <div className="pt-2">
                           <Label className="text-[10px] font-extrabold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest block mb-1.5">Courier Tracking ID</Label>
                           <div className="flex gap-2">
@@ -1935,7 +1935,7 @@ const SellerDashboard: React.FC = () => {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 dark:border-zinc-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50 px-6 py-2 pb-safe flex justify-between items-center">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 dark:border-zinc-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50 px-2 sm:px-6 py-2 pb-safe flex justify-between items-center">
         <NavItem icon="chart-line" label="Home" tab="home" />
         <NavItem icon="receipt" label="Orders" tab="orders" badge={orders.filter((o: any) => o.status === "pending").length} />
         <NavItem icon="boxes" label="Products" tab="products" />
@@ -1979,7 +1979,7 @@ const SellerDashboard: React.FC = () => {
                   type="text"
                   value={courierNameInput}
                   onChange={e => setCourierNameInput(e.target.value)}
-                  placeholder="e.g. Pathao, Steadfast..."
+                  placeholder="e.g. Pathao, RedX..."
                   className="w-full px-4 py-3 bg-[#F5F5F7] dark:bg-zinc-800 border-none rounded-xl text-sm font-semibold outline-none focus:ring-1 focus:ring-[#EF8020] text-zinc-900 dark:text-zinc-100"
                 />
               </div>
