@@ -26,7 +26,7 @@ import {
   X, ArrowLeft, ShieldAlert, Award, ChevronRight, ChevronDown, Menu, Home as HomeIcon,
   BookOpen, Bell, CreditCard, Truck, Percent, Users, Edit3, Settings, Shield,
   ArrowRight, Video, FileText, CheckCircle, MessageSquare, Search, SlidersHorizontal,
-  MapPin, Phone, LayoutDashboard, ClipboardList, Boxes, Sliders
+  MapPin, Phone, LayoutDashboard, ClipboardList, Boxes, Sliders, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ const SellerDashboard: React.FC = () => {
   
   // Custom navigation structure (Tabs/views inside the full-screen space)
   const [activeTab, setActiveTab] = useState<
-    "home" | "orders" | "products" | "blog" | "settings_store" | "settings_payment" | "settings_shipping" | "settings_coupons" | "settings_categories" | "settings_members" | "add_product" | "edit_product" | "add_story" | "more" | "settings_tax"
+    "home" | "orders" | "products" | "blog" | "settings_store" | "settings_payment" | "settings_shipping" | "settings_coupons" | "settings_categories" | "settings_members" | "add_product" | "edit_product" | "add_story" | "more" | "settings_tax" | "custom_payments" | "exchanges"
   >("home");
 
   // Dynamic Store Settings states
@@ -122,6 +122,16 @@ const SellerDashboard: React.FC = () => {
   const [deliveryManNumberInput, setDeliveryManNumberInput] = useState("");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // New Custom Payments and Exchanges states
+  const [customPayments, setCustomPayments] = useState<any[]>([]);
+  const [exchanges, setExchanges] = useState<any[]>([]);
+  const [customPayAmountInput, setCustomPayAmountInput] = useState("");
+  const [generatedPayLink, setGeneratedPayLink] = useState("");
+  const [selectedExchangePhotoUrl, setSelectedExchangePhotoUrl] = useState<string | null>(null);
+  const [exchangeCancelModalId, setExchangeCancelModalId] = useState<string | null>(null);
+  const [exchangeCancelModalType, setExchangeCancelModalType] = useState<"cancelled" | "returned" | null>(null);
+  const [exchangeReasonText, setExchangeReasonText] = useState("");
 
   // Editing state
   const [productEditingId, setProductEditingId] = useState<string | null>(null);
@@ -301,6 +311,18 @@ const SellerDashboard: React.FC = () => {
       const couponQuery = query(collection(db, "coupons"), where("sellerId", "==", sellerId));
       const couponSnap = await getDocs(couponQuery);
       setCoupons(couponSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      // 5. Fetch Custom Payments
+      const payQuery = query(collection(db, "custom_payments"), where("sellerId", "==", sellerId));
+      const paySnap = await getDocs(payQuery);
+      const payList = paySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCustomPayments(payList.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
+
+      // 6. Fetch Exchange Requests
+      const exQuery = query(collection(db, "exchanges"), where("sellerId", "==", sellerId));
+      const exSnap = await getDocs(exQuery);
+      const exList = exSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setExchanges(exList.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0)));
     } catch (err) {
       console.error(err);
       notify("Failed to fetch dashboard data.", "error");
@@ -756,6 +778,29 @@ const SellerDashboard: React.FC = () => {
               )}
             </button>
           )}
+
+          <button onClick={() => { setActiveTab("custom_payments"); setSelectedOrderId(null); }} className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "custom_payments" ? "bg-[#EF8020]/10 text-[#EF8020]" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"} w-full`}>
+            <div className="flex items-center gap-3">
+              <Icon name="wallet" className={`w-5 h-5 ${activeTab === "custom_payments" ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} /> Custom Pay
+            </div>
+            {customPayments.filter(p => p.status === "pending").length > 0 && (
+              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {customPayments.filter(p => p.status === "pending").length}
+              </span>
+            )}
+          </button>
+
+          <button onClick={() => { setActiveTab("exchanges"); setSelectedOrderId(null); }} className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "exchanges" ? "bg-[#EF8020]/10 text-[#EF8020]" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"} w-full`}>
+            <div className="flex items-center gap-3">
+              <Icon name="sync-alt" className={`w-5 h-5 ${activeTab === "exchanges" ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} /> Exchange
+            </div>
+            {exchanges.filter(e => e.status === "pending").length > 0 && (
+              <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {exchanges.filter(e => e.status === "pending").length}
+              </span>
+            )}
+          </button>
+
           <button onClick={() => { setActiveTab("settings_store"); setSelectedOrderId(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab.startsWith("settings") ? "bg-[#EF8020]/10 text-[#EF8020]" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
             <Icon name="sliders-h" className={`w-5 h-5 ${activeTab.startsWith("settings") ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} /> Settings
           </button>
@@ -1626,6 +1671,265 @@ const SellerDashboard: React.FC = () => {
                  </div>
               </div>
             )}
+
+            {/* --- CUSTOM PAYMENTS TAB --- */}
+            {activeTab === "custom_payments" && !selectedOrderId && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100">Custom Payment Links</h2>
+                </div>
+
+                {/* Generator Form */}
+                <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-4">
+                  <h3 className="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">Generate New Custom Payment Link</h3>
+                  <div className="flex gap-3">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs font-bold font-mono">৳</span>
+                      <Input
+                        type="number"
+                        value={customPayAmountInput}
+                        onChange={(e) => setCustomPayAmountInput(e.target.value)}
+                        placeholder="Enter amount (e.g., 500)"
+                        className="pl-8 rounded-xl bg-[#F5F5F7] dark:bg-zinc-800 border-transparent dark:border-zinc-700 h-12 text-zinc-900 dark:text-zinc-100"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (!customPayAmountInput || Number(customPayAmountInput) <= 0) {
+                          notify("Please enter a valid positive amount.", "error");
+                          return;
+                        }
+                        const generatedUrl = `${window.location.origin}/custom-pay?amount=${customPayAmountInput}&sellerId=${user?.uid}`;
+                        setGeneratedPayLink(generatedUrl);
+                        notify("Payment link generated!", "success");
+                      }}
+                      className="h-12 bg-[#EF8020] hover:bg-[#EF8020]/90 text-white rounded-xl font-bold px-5"
+                    >
+                      Generate Link
+                    </Button>
+                  </div>
+
+                  {generatedPayLink && (
+                    <div className="p-4 bg-orange-500/5 dark:bg-orange-500/10 border border-orange-500/10 rounded-2xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                      <p className="text-xs font-mono font-medium text-orange-600 dark:text-orange-400 truncate flex-1">{generatedPayLink}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(generatedPayLink);
+                          notify("Payment link copied to clipboard!", "success");
+                        }}
+                        className="p-2 bg-white dark:bg-zinc-800 border border-orange-500/10 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                      >
+                        <Copy className="w-4 h-4 text-orange-500" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submitted Custom Payments list */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">Submitted Custom Payments ({customPayments.length})</h3>
+                  {customPayments.length === 0 ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 p-12 text-center text-zinc-400 font-medium">
+                      No custom payment submissions found.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {customPayments.map((p) => (
+                        <div key={p.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-5 border border-zinc-100 dark:border-zinc-800 shadow-sm flex flex-col gap-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-snug">{p.userName}</h4>
+                              <p className="text-[10px] font-medium text-zinc-400 mt-0.5">{p.userEmail}</p>
+                            </div>
+                            <span className="font-mono font-black text-sm text-zinc-900 dark:text-white">{formatPrice(p.amount)}</span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 bg-[#F5F5F7] dark:bg-zinc-800/40 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800/80">
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Sender Number</span>
+                              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 font-mono">{p.senderNumber}</span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Transaction ID (TrxID)</span>
+                              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-mono">{p.trxId}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center mt-1">
+                            <span className="text-[10px] text-zinc-400 font-mono">{new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                            {p.status === "pending" ? (
+                              <Button
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    await updateDoc(doc(db, "custom_payments", p.id), { status: "approved" });
+                                    notify("Payment verified and approved!", "success");
+                                    fetchSellerData(user!.uid, false);
+                                  } catch (err) {
+                                    notify("Failed to approve payment.", "error");
+                                  }
+                                }}
+                                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-bold px-3 shadow-sm"
+                              >
+                                Approve Payment
+                              </Button>
+                            ) : (
+                              <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-bold border border-emerald-500/10">
+                                Approved & Verified
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* --- EXCHANGES TAB --- */}
+            {activeTab === "exchanges" && !selectedOrderId && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100">Exchange Requests</h2>
+                </div>
+
+                {/* Exchange Link Share Card */}
+                <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] p-5 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-3">
+                  <h3 className="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">Shareable Exchange Request Form Link</h3>
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">
+                    Copy and send this link to users who want to submit their phone exchange requests to your store.
+                  </p>
+                  <div className="p-4 bg-orange-500/5 dark:bg-orange-500/10 border border-orange-500/10 rounded-2xl flex items-center justify-between gap-3">
+                    <p className="text-xs font-mono font-medium text-orange-600 dark:text-orange-400 truncate flex-1">
+                      {`${window.location.origin}/exchange-request?sellerId=${user?.uid}`}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/exchange-request?sellerId=${user?.uid}`);
+                        notify("Exchange request link copied!", "success");
+                      }}
+                      className="p-2 bg-white dark:bg-zinc-800 border border-orange-500/10 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition"
+                    >
+                      <Copy className="w-4 h-4 text-orange-500" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submitted Exchange Requests list */}
+                <div className="space-y-4">
+                  <h3 className="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">Submitted Requests ({exchanges.length})</h3>
+                  {exchanges.length === 0 ? (
+                    <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 p-12 text-center text-zinc-400 font-medium">
+                      No exchange proposals found.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {exchanges.map((ex) => (
+                        <div key={ex.id} className="bg-white dark:bg-zinc-900 rounded-3xl p-5 border border-zinc-100 dark:border-zinc-800 shadow-sm flex flex-col gap-4">
+                          {/* User Header */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm leading-tight">{ex.userName}</h4>
+                              <p className="text-[10px] font-medium text-zinc-400 mt-0.5">{ex.userEmail}</p>
+                            </div>
+                            <span className="text-[10px] text-zinc-400 font-mono">{new Date(ex.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+
+                          {/* Swap Details */}
+                          <div className="grid grid-cols-2 gap-4 bg-[#F5F5F7] dark:bg-zinc-800/40 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800/80">
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Their Device</span>
+                              <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 block">{ex.phoneName}</span>
+                              <span className="text-[10px] text-zinc-500 font-medium mt-1 inline-block bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded-md">
+                                {ex.condition} | {ex.storage}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block">Target Device</span>
+                              <span className="text-xs font-black text-orange-500 mt-0.5 block">{ex.targetPhone}</span>
+                              {ex.customPaymentAmount > 0 && (
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mt-1 inline-block">
+                                  Custom Paid: {formatPrice(ex.customPaymentAmount)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Uploaded Images Thumbnails */}
+                          {ex.images && ex.images.length > 0 && (
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">Device Pictures (Click to zoom)</span>
+                              <div className="flex flex-wrap gap-2">
+                                {ex.images.map((imgUrl: string, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    onClick={() => setSelectedExchangePhotoUrl(imgUrl)}
+                                    className="w-16 h-16 rounded-xl overflow-hidden border border-zinc-100 dark:border-zinc-800 cursor-pointer hover:opacity-85 transition bg-zinc-100"
+                                  >
+                                    <img src={imgUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Status workflow updater */}
+                          <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div>
+                              <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">Exchange Status</span>
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/10">
+                                {ex.status.replace(/_/g, " ")}
+                              </span>
+                              {ex.status === "cancelled" && ex.cancelReason && (
+                                <p className="text-[10px] font-bold text-rose-500 mt-1">Reason: {ex.cancelReason}</p>
+                              )}
+                              {ex.status === "returned" && ex.returnReason && (
+                                <p className="text-[10px] font-bold text-rose-500 mt-1">Reason: {ex.returnReason}</p>
+                              )}
+                            </div>
+
+                            <div className="relative">
+                              <select
+                                value={ex.status}
+                                onChange={async (e) => {
+                                  const newStatus = e.target.value;
+                                  if (newStatus === "cancelled" || newStatus === "returned") {
+                                    setExchangeCancelModalId(ex.id);
+                                    setExchangeCancelModalType(newStatus as any);
+                                    setExchangeReasonText("");
+                                  } else {
+                                    try {
+                                      await updateDoc(doc(db, "exchanges", ex.id), { status: newStatus });
+                                      notify("Exchange status updated!", "success");
+                                      fetchSellerData(user!.uid, false);
+                                    } catch (err) {
+                                      notify("Failed to update status.", "error");
+                                    }
+                                  }
+                                }}
+                                className="h-9 text-[11px] font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 px-3 outline-none focus:ring-1 focus:ring-orange-500"
+                              >
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="payment_processing">Payment Processing</option>
+                                <option value="packaging">Packaging</option>
+                                <option value="complete_packaging">Complete Packaging</option>
+                                <option value="handed_on_courier">Handed on Courier</option>
+                                <option value="shipped_on_courier">Shipped on Courier</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="cancelled">Cancel / Reject</option>
+                                <option value="returned">Return</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -1636,6 +1940,8 @@ const SellerDashboard: React.FC = () => {
         <NavItem icon="receipt" label="Orders" tab="orders" badge={orders.filter((o: any) => o.status === "pending").length} />
         <NavItem icon="boxes" label="Products" tab="products" />
         {sellerProfile?.canUseCourierShipping && <NavItem icon="truck" label="Due" tab="courier_dues" badge={orders.filter((o: any) => o.courierPaymentStatus === 'checking').length > 0 ? orders.filter((o: any) => o.courierPaymentStatus === 'checking').length : undefined} />}
+        <NavItem icon="wallet" label="Custom Pay" tab="custom_payments" badge={customPayments.filter((p: any) => p.status === "pending").length} />
+        <NavItem icon="sync-alt" label="Exchange" tab="exchanges" badge={exchanges.filter((e: any) => e.status === "pending").length} />
         <NavItem icon="sliders-h" label="Settings" tab="settings_store" />
       </div>
       
@@ -1799,6 +2105,99 @@ const SellerDashboard: React.FC = () => {
                 {cancelModalStatus === OrderStatus.RETURNED ? "Submit Return" : "Cancel Order"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exchange Cancel / Return Reason Dialog Modal */}
+      {exchangeCancelModalId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            onClick={() => {
+              setExchangeCancelModalId(null);
+              setExchangeCancelModalType(null);
+            }} 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+          />
+          <div className="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-zinc-100 dark:border-zinc-800 relative z-10 animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-[15px]">
+                {exchangeCancelModalType === "returned" ? "Return Exchange" : "Cancel / Reject Exchange"}
+              </h3>
+              <button 
+                onClick={() => {
+                  setExchangeCancelModalId(null);
+                  setExchangeCancelModalType(null);
+                }} 
+                className="w-8 h-8 rounded-full bg-[#F5F5F7] dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 hover:text-zinc-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+              Please specify a reason for {exchangeCancelModalType === "returned" ? "returning" : "cancelling/rejecting"} this exchange. The user will see this status and reason on their account.
+            </p>
+            
+            <textarea 
+              value={exchangeReasonText} 
+              onChange={(e) => setExchangeReasonText(e.target.value)} 
+              placeholder={exchangeCancelModalType === "returned" ? "e.g., Device condition didn't match description, etc..." : "e.g., Requested device is no longer in stock, etc..."} 
+              className="w-full h-24 p-3 rounded-2xl bg-[#F5F5F7] dark:bg-zinc-800 text-xs font-medium placeholder:text-zinc-400 outline-none border-none resize-none focus:ring-1 focus:ring-[#EF8020] text-zinc-900 dark:text-zinc-100"
+            />
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setExchangeCancelModalId(null);
+                  setExchangeCancelModalType(null);
+                }} 
+                className="flex-1 h-12 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl"
+              >
+                Go Back
+              </button>
+              <button 
+                disabled={!exchangeReasonText.trim()} 
+                onClick={async () => {
+                  if (exchangeReasonText.trim() && exchangeCancelModalId && exchangeCancelModalType) {
+                    try {
+                      const updateField = exchangeCancelModalType === "cancelled" ? { status: "cancelled", cancelReason: exchangeReasonText.trim() } : { status: "returned", returnReason: exchangeReasonText.trim() };
+                      await updateDoc(doc(db, "exchanges", exchangeCancelModalId), updateField);
+                      notify(`Exchange updated to ${exchangeCancelModalType}!`, "success");
+                      setExchangeCancelModalId(null);
+                      setExchangeCancelModalType(null);
+                      setExchangeReasonText("");
+                      fetchSellerData(user!.uid, false);
+                    } catch (err) {
+                      notify("Failed to update exchange status.", "error");
+                    }
+                  }
+                }} 
+                className="flex-1 h-12 bg-rose-500 hover:bg-rose-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl shadow-sm"
+              >
+                {exchangeCancelModalType === "returned" ? "Submit Return" : "Cancel Exchange"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full-screen exchange image zoom viewer */}
+      {selectedExchangePhotoUrl && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 animate-in fade-in duration-300">
+          <button 
+            onClick={() => setSelectedExchangePhotoUrl(null)} 
+            className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition z-20"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="w-full h-full p-4 flex items-center justify-center">
+            <img 
+              src={selectedExchangePhotoUrl} 
+              alt="Zoomed View" 
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+              referrerPolicy="no-referrer"
+            />
           </div>
         </div>
       )}

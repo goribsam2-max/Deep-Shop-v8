@@ -226,6 +226,8 @@ import Cart from './pages/Cart';
 import Profile from './pages/Profile';
 import AffiliatePage from './pages/Affiliate';
 import MyOrders from './pages/MyOrders';
+import CustomPay from './pages/CustomPay';
+import ExchangeRequest from './pages/ExchangeRequest';
 import OrderActionPage from './pages/OrderActionPage';
 import NotificationsPage from './pages/Notifications';
 import Onboarding from './pages/Onboarding';
@@ -708,6 +710,8 @@ const AppContent: React.FC = () => {
           <Route path="/messages" element={<PageWrapper><Messages /></PageWrapper>} />
           <Route path="/kyc-verification" element={<PageWrapper><KycVerification /></PageWrapper>} />
           <Route path="/orders" element={<PageWrapper><MyOrders /></PageWrapper>} />
+          <Route path="/custom-pay" element={<PageWrapper><CustomPay /></PageWrapper>} />
+          <Route path="/exchange-request" element={<PageWrapper><ExchangeRequest /></PageWrapper>} />
           <Route path="/orders/:actionName" element={<PageWrapper><OrderActionPage /></PageWrapper>} />
           <Route path="/notifications" element={<PageWrapper><NotificationsPage /></PageWrapper>} />
           <Route path="/wishlist" element={<PageWrapper><Wishlist /></PageWrapper>} />

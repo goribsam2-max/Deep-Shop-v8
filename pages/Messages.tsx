@@ -1515,8 +1515,9 @@ const handleCreateChannel = async () => {
     
     const loadOtherUserReviews = async () => {
       setIsTrustLoading(true);
-      if (activeChat.otherUser.id === 'system') {
-        setOtherUserTrust({ score: 100, count: 0, avgRating: 5, hasScamWarning: false });
+      const emailLower = activeChat?.otherUser?.email?.toLowerCase().trim();
+      if (activeChat.otherUser.id === 'system' || emailLower === 'deepshop@gmail.com' || emailLower === 'deepshopbysam@gmail.com') {
+        setOtherUserTrust({ score: 100, count: 120, avgRating: 5, hasScamWarning: false });
         setIsTrustLoading(false);
         return;
       }
@@ -5205,105 +5206,74 @@ const handleCreateChannel = async () => {
                    </div>
                  )}
 
-                 {messages.length === 0 && !isTrustLoading && (
-                   (!otherUserTrust || otherUserTrust.count === 0 || otherUserTrust.hasScamWarning) ? (
-                     <div className="bg-rose-500/10 border-b border-rose-500/25 px-4 py-3 flex items-start gap-3 shrink-0 z-10 shadow-sm relative font-inter animate-pulse">
-                       <Icon name="alert-circle" className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                       <div className="flex-1 min-w-0">
-                         <p className="font-black text-xs text-rose-600 dark:text-rose-400 uppercase tracking-wider">⚠️ Review Low (Be Careful)</p>
-                         <p className="text-[11px] text-zinc-650 dark:text-zinc-300 font-medium leading-relaxed mt-0.5">
-                           Review low eita untrusted o hote pare be careful! This user has low or zero reviews. Be careful when interacting or initiating transactions.
-                         </p>
-                       </div>
-                     </div>
-                   ) : (
-                     <div className="bg-emerald-500/10 border-b border-emerald-500/25 px-4 py-3 flex items-start gap-3 shrink-0 z-10 shadow-sm relative font-inter">
-                       <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                       <div className="flex-1 min-w-0">
-                         <p className="font-black text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">✅ Maybe Trusted Merchant</p>
-                         <p className="text-[11px] text-zinc-650 dark:text-zinc-300 font-medium leading-relaxed mt-0.5">
-                           Maybe trusted, reason: good review & star ratings! (Rating: {otherUserTrust.avgRating}★ from {otherUserTrust.count} reviews)
-                         </p>
-                       </div>
-                     </div>
-                   )
-                 )}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                  {messages.length === 0 && !isTrustLoading && (() => {
+                    const emailLower = activeChat?.otherUser?.email?.toLowerCase().trim();
+                    const isDeepShopUser = emailLower === 'deepshop@gmail.com' || emailLower === 'deepshopbysam@gmail.com' || activeChat?.otherUser?.id === 'system';
+                    
+                    if (isDeepShopUser) {
+                      return (
+                        <div className="bg-emerald-500/10 border-b border-emerald-500/25 px-4 py-3 flex items-start gap-3 shrink-0 z-10 shadow-sm relative font-inter">
+                          <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-black text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">✅ Fully Trusted Merchant</p>
+                            <p className="text-[11px] text-zinc-650 dark:text-zinc-300 font-medium leading-relaxed mt-0.5">
+                              Fully trusted, reason: official verified merchant of deepshop!
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    return (!otherUserTrust || otherUserTrust.count === 0 || otherUserTrust.hasScamWarning) ? (
+                      <div className="bg-rose-500/10 border-b border-rose-500/25 px-4 py-3 flex items-start gap-3 shrink-0 z-10 shadow-sm relative font-inter animate-pulse">
+                        <Icon name="alert-circle" className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-xs text-rose-600 dark:text-rose-400 uppercase tracking-wider">⚠️ Review Low (Be Careful)</p>
+                          <p className="text-[11px] text-zinc-650 dark:text-zinc-300 font-medium leading-relaxed mt-0.5">
+                            Review low eita untrusted o hote pare be careful! This user has low or zero reviews. Be careful when interacting or initiating transactions.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-emerald-500/10 border-b border-emerald-500/25 px-4 py-3 flex items-start gap-3 shrink-0 z-10 shadow-sm relative font-inter">
+                        <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">✅ Maybe Trusted Merchant</p>
+                          <p className="text-[11px] text-zinc-650 dark:text-zinc-300 font-medium leading-relaxed mt-0.5">
+                            Maybe trusted, reason: good review & star ratings! (Rating: {otherUserTrust.avgRating}★ from {otherUserTrust.count} reviews)
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
-                 {activeChat?.pinnedMessage && (
-                   <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-zinc-900/90 dark:to-zinc-950/90 border-b border-amber-100 dark:border-zinc-800 px-4 py-2 flex items-center justify-between text-xs shrink-0 z-10 shadow-sm relative">
-                     <div className="flex items-center gap-2 min-w-0 cursor-pointer flex-1" onClick={() => {
-                       const targetMsg = messages.find(m => m.id === activeChat.pinnedMessage.id);
-                       if (targetMsg) {
-                         document.getElementById(`msg-${targetMsg.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                         triggerHighlight(targetMsg.id);
-                       } else {
-                         notify(`Pinned: ${activeChat.pinnedMessage.text}`, "info");
-                       }
-                     }}>
-                       <Pin className="w-3.5 h-3.5 text-[#EF8020] rotate-45 shrink-0" />
-                       <div className="min-w-0">
-                         <p className="font-bold text-[10px] text-[#EF8020] uppercase tracking-wider">Pinned Message</p>
-                         <p className="text-[11px] text-zinc-600 dark:text-zinc-300 truncate mt-0.5">{activeChat.pinnedMessage.text}</p>
-                       </div>
-                     </div>
-                     <button 
-                       type="button" 
-                       onClick={handleUnpinMessageP2P}
-                       className="p-1 rounded-full bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-400 hover:text-zinc-600 transition ml-2"
-                       title="Unpin Message"
-                     >
-                       <X className="w-3 h-3" />
-                     </button>
-                   </div>
-                 )}
+                  {activeChat?.pinnedMessage && (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-zinc-900/90 dark:to-zinc-950/90 border-b border-amber-100 dark:border-zinc-800 px-4 py-2 flex items-center justify-between text-xs shrink-0 z-10 shadow-sm relative">
+                      <div className="flex items-center gap-2 min-w-0 cursor-pointer flex-1" onClick={() => {
+                        const targetMsg = messages.find(m => m.id === activeChat.pinnedMessage.id);
+                        if (targetMsg) {
+                          document.getElementById(`msg-${targetMsg.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          triggerHighlight(targetMsg.id);
+                        } else {
+                          notify(`Pinned: ${activeChat.pinnedMessage.text}`, "info");
+                        }
+                      }}>
+                        <Pin className="w-3.5 h-3.5 text-[#EF8020] rotate-45 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-bold text-[10px] text-[#EF8020] uppercase tracking-wider">Pinned Message</p>
+                          <p className="text-zinc-650 dark:text-zinc-400 truncate max-w-full font-medium mt-0.5">
+                            {activeChat.pinnedMessage.text || "Attachment"}
+                          </p>
+                        </div>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleUnpinMessageP2P(); }} className="p-1 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition text-zinc-400 shrink-0 ml-2">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
 
-                 {/* Messages Area */}
-                 <div 
-                     className="flex-1 overflow-y-auto p-4 space-y-4 relative transition-all duration-300"
-                     style={chatWallpaper ? {
-                         backgroundImage: `url(${chatWallpaper})`,
-                         backgroundSize: 'cover',
-                         backgroundPosition: 'center',
-                         backgroundRepeat: 'no-repeat'
-                     } : {}}
-                 >
-                     <div className="flex justify-center my-6">
-                         <span className="text-[10px] font-bold text-zinc-400 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full uppercase tracking-wider">
-                             End-to-End Encrypted
-                         </span>
-                     </div>
-                     {activeChat?.autoDeleteTimer && (
-                         <div className="flex justify-center mb-2 shrink-0">
-                             <div className="flex items-center gap-3 px-4 py-2.5 bg-amber-500/10 border border-amber-500/20 rounded-2xl max-w-md shadow-sm">
-                                 <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                                 <span className="text-xs font-bold text-amber-700 dark:text-amber-400 text-left">
-                                     Auto-Delete is enabled: Messages will delete after {
-                                         activeChat.autoDeleteTimer.duration === 86400000 ? "1 Day" :
-                                         activeChat.autoDeleteTimer.duration === 604800000 ? "1 Week" :
-                                         activeChat.autoDeleteTimer.duration === 2592000000 ? "1 Month" : "specified time"
-                                     }
-                                 </span>
-                                 <button
-                                     onClick={async () => {
-                                         try {
-                                             await updateDoc(doc(db, 'p2p_chats', activeChat.id), {
-                                                 autoDeleteTimer: null
-                                             });
-                                             notify("Auto-delete timer disabled", "info");
-                                         } catch(e) {
-                                             console.error(e);
-                                             notify("Failed to disable timer", "error");
-                                         }
-                                     }}
-                                     className="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-lg hover:bg-amber-500/30 transition shrink-0"
-                                 >
-                                     Turn Off
-                                 </button>
-                             </div>
-                         </div>
-                     )}
-                     
-                     {filteredMessages.map((msg, idx) => {
+                  {filteredMessages.map((msg, idx) => {
                          const showDate = idx === 0 || formatDateSeparator(msg.timestamp) !== formatDateSeparator(messages[idx - 1].timestamp);
                          const isMe = msg.senderId === user.uid;
                          const showAvatar = !isMe && (idx === 0 || messages[idx-1]?.senderId !== msg.senderId);
@@ -6401,31 +6371,52 @@ const handleCreateChannel = async () => {
                         </div>
                       </div>
                     ) : (
-                      (!otherUserTrust || otherUserTrust.count === 0 || otherUserTrust.hasScamWarning) ? (
-                          <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-4 flex gap-3 text-left">
-                              <Icon name="alert-circle" className="w-5 h-5 text-rose-500 shrink-0 mt-0.5 animate-pulse animate-duration-1000" />
-                              <div>
-                                  <p className="font-extrabold text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1">
-                                      ⚠️ Review Low (Be Careful)
-                                  </p>
-                                  <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed mt-1 font-semibold">
-                                      Review low eita untrusted o hote pare be careful! This user has low or zero reviews. Be careful when interacting or initiating transactions.
-                                  </p>
-                              </div>
-                          </div>
-                      ) : (
-                          <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 flex gap-3 text-left">
-                              <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                              <div>
-                                  <p className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                                      ✅ Maybe Trusted Merchant
-                                  </p>
-                                  <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed mt-1 font-semibold">
-                                      Maybe trusted, reason: good review & star ratings! (Rating: {otherUserTrust.avgRating}★ from {otherUserTrust.count} reviews)
-                                  </p>
-                              </div>
-                          </div>
-                      )
+                      (() => {
+                        const emailLower = activeChat?.otherUser?.email?.toLowerCase().trim();
+                        const isDeepShopUser = emailLower === 'deepshop@gmail.com' || emailLower === 'deepshopbysam@gmail.com' || activeChat?.otherUser?.id === 'system';
+                        
+                        if (isDeepShopUser) {
+                          return (
+                            <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 flex gap-3 text-left">
+                                <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                                        ✅ Fully Trusted Merchant
+                                    </p>
+                                    <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed mt-1 font-semibold">
+                                        Fully trusted, reason: official verified merchant of deepshop!
+                                    </p>
+                                </div>
+                            </div>
+                          );
+                        }
+                        
+                        return (!otherUserTrust || otherUserTrust.count === 0 || otherUserTrust.hasScamWarning) ? (
+                            <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-4 flex gap-3 text-left">
+                                <Icon name="alert-circle" className="w-5 h-5 text-rose-500 shrink-0 mt-0.5 animate-pulse animate-duration-1000" />
+                                <div>
+                                    <p className="font-extrabold text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1">
+                                        ⚠️ Review Low (Be Careful)
+                                    </p>
+                                    <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed mt-1 font-semibold">
+                                        Review low eita untrusted o hote pare be careful! This user has low or zero reviews. Be careful when interacting or initiating transactions.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-emerald-500/10 border border-emerald-500/25 rounded-2xl p-4 flex gap-3 text-left">
+                                <Icon name="check-circle" className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                                        ✅ Maybe Trusted Merchant
+                                    </p>
+                                    <p className="text-[11px] text-zinc-650 dark:text-zinc-300 leading-relaxed mt-1 font-semibold">
+                                        Maybe trusted, reason: good review & star ratings! (Rating: {otherUserTrust.avgRating}★ from {otherUserTrust.count} reviews)
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                      })()
                     )}
                   </div>
 
