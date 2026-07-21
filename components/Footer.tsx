@@ -15,7 +15,7 @@ export const Footer = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const waNumber = "8801778953114"; // without + for link
+  const waNumber = "17247648185"; // without + for link
 
   useEffect(() => {
     getDoc(doc(db, 'settings', 'payments')).then(snap => {
@@ -150,7 +150,7 @@ export const Footer = () => {
                         <PhoneCall className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs font-black text-zinc-900 dark:text-white">{t('helpline')}: +8801778953114</p>
+                        <p className="text-xs font-black text-zinc-900 dark:text-white">{t('helpline')}: +1 (724) 764-8185</p>
                         <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">10:00 AM - 10:00 PM</p>
                       </div>
                     </div>
@@ -214,13 +214,13 @@ export const Footer = () => {
             </div>
             
             <div className="space-y-3">
-              <a href="tel:+8801778953114" className="w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-blue-600 dark:text-blue-400">
+              <a href="tel:+17247648185" className="w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-blue-600 dark:text-blue-400">
                 <div className="w-12 h-12 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm">
                   <PhoneCall className="w-5 h-5 text-[var(--linkC)] dark:text-[var(--darkU)]" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold">Direct Call</p>
-                  <p className="text-xs opacity-80">+880 1778-953114</p>
+                  <p className="text-xs opacity-80">+1 (724) 764-8185</p>
                 </div>
               </a>
 

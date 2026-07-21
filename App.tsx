@@ -159,7 +159,7 @@ const SEOProvider = () => {
                "logo": data.appIconUrl || "https://www.deepshop.top/favicon.png",
                "image": data.appIconUrl || "https://www.deepshop.top/favicon.png",
                "description": data.metaDescription || "DEEP SHOP is the top-rated provider of Border Cross Phones, Original Mobiles, and high-quality tech accessories in Bangladesh.",
-               "telephone": "+8801778953114",
+               "telephone": "+1 (724) 764-8185",
                "priceRange": "$$",
                "address": {
                  "@type": "PostalAddress",
@@ -313,6 +313,7 @@ import ManageSEO from './pages/admin/ManageSEO';
 import ManageIcons from './pages/admin/ManageIcons';
 import ManageIllustrations from './pages/admin/ManageIllustrations';
 import AdminNotifications from './pages/admin/AdminNotifications';
+import ManageUsersMobile from './pages/admin/ManageUsersMobile';
 
 // Components
 import BottomMenu from './components/ui/BottomMenu';
@@ -1036,6 +1037,7 @@ const AppContent: React.FC = () => {
                   <Route path="products" element={<PageWrapper><ManageProducts /></PageWrapper>} />
                   <Route path="products/edit/:id" element={<PageWrapper><EditProduct /></PageWrapper>} />
                   <Route path="users" element={<PageWrapper><ManageUsers /></PageWrapper>} />
+                  <Route path="users-mobile" element={<PageWrapper><ManageUsersMobile /></PageWrapper>} />
                   <Route path="password-resets" element={<PageWrapper><ManagePasswordResets /></PageWrapper>} />
                   <Route path="push-notifications" element={<PageWrapper><ManagePushNotifications /></PageWrapper>} />
                   <Route path="orders" element={<PageWrapper><ManageOrders /></PageWrapper>} />

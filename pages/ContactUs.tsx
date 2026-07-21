@@ -77,17 +77,17 @@ const ContactUs: React.FC = () => {
                 </div>
               </a>
               
-              <a href="tel:01778953114" className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-600 transition-all flex items-start gap-4 group text-left block">
+              <a href="tel:+17247648185" className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-600 transition-all flex items-start gap-4 group text-left block">
                 <div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white dark:group-hover:bg-zinc-100 dark:group-hover:text-zinc-900 transition-colors">
                   <Icon name="phone-alt" className="text-lg" />
                 </div>
                 <div>
                   <h4 className="font-bold text-base text-zinc-900 dark:text-zinc-100 tracking-tight">Call Us</h4>
-                  <p className="text-xs text-zinc-500 mt-1 font-semibold">01778953114 (10 AM to 10 PM)</p>
+                  <p className="text-xs text-zinc-500 mt-1 font-semibold">+1 (724) 764-8185 (10 AM to 10 PM)</p>
                 </div>
               </a>
               
-              <a href="https://wa.me/8801778953114" target="_blank" rel="noreferrer" className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all flex items-start gap-4 group text-left block">
+              <a href="https://wa.me/17247648185" target="_blank" rel="noreferrer" className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-[2rem] hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-800 transition-all flex items-start gap-4 group text-left block">
                 <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                   <Icon name="whatsapp" className="text-lg" />
                 </div>

@@ -122,6 +122,14 @@ const ADMIN_PIN_ITEMS: PinListItem[] = [
     href: 'users'
   },
   {
+    id: 'manage-users-mobile',
+    name: 'Mobile User Manager',
+    info: 'Mobile customer & order manager',
+    icon: Users,
+    pinned: true,
+    href: 'users-mobile'
+  },
+  {
     id: 'manage-tickets',
     name: 'Help Desk',
     info: 'Support tickets',
@@ -272,6 +280,7 @@ const AdminDashboard: React.FC = () => {
         'manage-products': 'products',
         'manage-orders': 'orders',
         'manage-users': 'users',
+        'manage-users-mobile': 'users',
         'manage-coupons': 'coupons',
         'manage-tickets': 'helpdesk',
         'manage-vg-helpline': 'helpdesk',

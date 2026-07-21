@@ -53,8 +53,8 @@ const ManageConfig: React.FC = () => {
     affiliateTier4Commission: 200,
     pwaPopupStyle: "style1",
     pwaPopupIcon: "",
-    customerHotline: "+8801778953114",
-    whatsappNumber: "+8801778953114",
+    customerHotline: "+1 (724) 764-8185",
+    whatsappNumber: "+1 (724) 764-8185",
     facebookPageUrl: "https://facebook.com/deepshop.top",
     facebookPageName: "DEEP SHOP Facebook Page",
   });
