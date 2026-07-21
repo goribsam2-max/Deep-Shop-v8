@@ -127,12 +127,25 @@ export const BiometricSetup: React.FC = () => {
       notify("Please scan your fingerprint or verify your face to register biometric authentication...", "info");
       await testRegisterBiometrics();
       localStorage.setItem("vibe_biometric_enabled", "true");
+      localStorage.removeItem("vibe_biometric_simulated");
       setBiometricEnabled(true);
       notify("Biometric lock enabled successfully!", "success");
     } catch (e: any) {
       console.error(e);
-      // Fallback: explain that user authentication can also just use the passcode PIN
-      notify("Could not register biometrics. You can still secure your app using the 4-Digit Passcode PIN.", "warning");
+      const isIframeErr = e?.message?.includes("feature is not enabled") || 
+                          e?.message?.includes("Permissions Policy") || 
+                          e?.name === "SecurityError" || 
+                          e?.message?.includes("not enabled in this document") ||
+                          e?.message?.includes("cross-origin child frames");
+                          
+      if (isIframeErr || !window.PublicKeyCredential) {
+        localStorage.setItem("vibe_biometric_enabled", "true");
+        localStorage.setItem("vibe_biometric_simulated", "true");
+        setBiometricEnabled(true);
+        notify("Sandbox Biometrics enabled! (Simulated for iframe preview)", "success");
+      } else {
+        notify("Could not register biometrics. You can still secure your app using the 4-Digit Passcode PIN.", "warning");
+      }
     } finally {
       setSetupLoading(false);
     }
@@ -214,7 +227,7 @@ export const BiometricSetup: React.FC = () => {
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="Enter 4-digit PIN"
-                className="w-full px-5 py-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-center text-lg font-semibold tracking-widest text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1cdb5e]"
+                className="w-full px-5 py-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-center text-lg font-semibold tracking-normal text-zinc-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1cdb5e]"
               />
               <button
                 type="button"

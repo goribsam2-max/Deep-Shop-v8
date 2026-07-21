@@ -813,13 +813,7 @@ const ManageUsers: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-zinc-50 dark:bg-[#1A1A1A] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
-              <h4 className="text-xs font-semibold tracking-normal text-zinc-900 dark:text-zinc-100 mb-6">
-                
-
-            {/* Other Seller Stats Management */}
+            </div>            {/* Other Seller Stats Management */}
             {detailModal.user.role === 'seller' && (
               <div className="bg-zinc-50 dark:bg-[#1A1A1A] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
                 <h4 className="text-xs font-semibold tracking-normal text-zinc-900 dark:text-zinc-100 mb-6 flex items-center gap-2">
@@ -933,7 +927,52 @@ const ManageUsers: React.FC = () => {
               </div>
             )}
 
-Partner Management
+            {/* Account Status & Ban Actions */}
+            <div className="bg-zinc-50 dark:bg-[#1A1A1A] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
+              <h4 className="text-xs font-semibold tracking-normal text-zinc-900 dark:text-zinc-100 mb-6 flex items-center gap-2">
+                <Icon name="ban" className="text-red-500" />
+                Account Status & Ban Controls
+              </h4>
+              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-zinc-500">Ban / Block Status</p>
+                  <p className="mt-2">
+                    {detailModal.user.isBanned ? (
+                      <span className="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400 rounded-full text-xs font-bold">
+                        Banned / Blocked
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 rounded-full text-xs font-bold">
+                        Active
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const nextStatus = !detailModal.user!.isBanned;
+                    await toggleBan(detailModal.user!.uid, detailModal.user!.isBanned);
+                    setDetailModal({
+                      ...detailModal,
+                      user: { ...detailModal.user!, isBanned: nextStatus }
+                    });
+                  }}
+                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-white ${
+                    detailModal.user.isBanned
+                      ? "bg-emerald-600 hover:bg-emerald-500"
+                      : "bg-red-600 hover:bg-red-500"
+                  }`}
+                >
+                  {detailModal.user.isBanned ? "Unban / Unblock User" : "Ban / Block User"}
+                </button>
+              </div>
+            </div>
+
+            {/* Partner Management */}
+            <div className="bg-zinc-50 dark:bg-[#1A1A1A] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800">
+              <h4 className="text-xs font-semibold tracking-normal text-zinc-900 dark:text-zinc-100 mb-6 flex items-center gap-2">
+                <Icon name="users" className="text-pink-500" />
+                Partner Management
               </h4>
 
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between mb-8">

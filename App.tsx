@@ -1210,6 +1210,7 @@ import { MobileGuard } from './components/MobileGuard';
 import { NetworkStatus } from './components/NetworkStatus';
 import { PullToRefresh } from './components/PullToRefresh';
 import { IosSpinner } from './components/ui/ios-spinner';
+import { CookieConsent } from './components/CookieConsent';
 
 const App: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -1250,6 +1251,7 @@ const App: React.FC = () => {
                   <CartAbandonmentPopup />
                   <NotificationPermissionModal />
                   <AdManager />
+                  <CookieConsent />
                 </>
               )}
             </Router>
