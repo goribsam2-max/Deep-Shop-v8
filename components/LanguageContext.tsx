@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Language = 'en' | 'bn';
+type Language = 'en' | 'bn' | 'hi' | 'ar' | 'es' | 'fr' | 'de';
 
 type LanguageContextType = {
   language: Language;
@@ -8,7 +8,6 @@ type LanguageContextType = {
   t: (key: string) => string;
 };
 
-// Extremely basic dictionary for demonstration purposes.
 const translations: Record<Language, Record<string, string>> = {
   en: {
     'home': 'Home',
@@ -76,6 +75,54 @@ const translations: Record<Language, Record<string, string>> = {
     'Payment Details': 'পেমেন্টের বিবরণ',
     'Select a Voucher': 'ভাউচার নির্বাচন করুন',
     'Use': 'ব্যবহার করুন'
+  },
+  hi: {
+    'home': 'होम',
+    'search': 'खोजें',
+    'cart': 'कार्ट',
+    'profile': 'प्रोफाइल',
+    'wishlist': 'विशलिस्ट',
+    'all_products': 'सभी उत्पाद',
+    'contact_us': 'संपर्क करें',
+    'helpline': 'हेल्पलाइन',
+    'about_us': 'हमारे बारे में',
+    'terms': 'सेवा की शर्तें'
+  },
+  ar: {
+    'home': 'الرئيسية',
+    'search': 'بحث',
+    'cart': 'السلة',
+    'profile': 'الملف الشخصي',
+    'wishlist': 'قائمة الرغبات',
+    'all_products': 'جميع المنتجات',
+    'contact_us': 'اتصل بنا',
+    'helpline': 'خط المساعدة'
+  },
+  es: {
+    'home': 'Inicio',
+    'search': 'Buscar',
+    'cart': 'Carrito',
+    'profile': 'Perfil',
+    'wishlist': 'Deseos',
+    'all_products': 'Productos',
+    'contact_us': 'Contacto'
+  },
+  fr: {
+    'home': 'Accueil',
+    'search': 'Rechercher',
+    'cart': 'Panier',
+    'profile': 'Profil',
+    'wishlist': 'Favoris',
+    'all_products': 'Tous les produits',
+    'contact_us': 'Contactez-nous'
+  },
+  de: {
+    'home': 'Startseite',
+    'search': 'Suche',
+    'cart': 'Warenkorb',
+    'profile': 'Profil',
+    'wishlist': 'Wunschliste',
+    'all_products': 'Alle Produkte'
   }
 };
 
@@ -90,7 +137,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const saved = localStorage.getItem('language') as Language | null;
-    if (saved && (saved === 'en' || saved === 'bn')) {
+    if (saved) {
       setLanguageState(saved);
     }
   }, []);
@@ -101,9 +148,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const t = (key: string): string => {
-    const val = translations[language][key];
+    const val = translations[language]?.[key];
     if (val) return val;
-    // Fallback: If translation is missing but it's snake_case, format beautifully
     if (key.includes('_')) {
       return key
         .split('_')
@@ -121,3 +167,4 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 };
 
 export const useLanguage = () => useContext(LanguageContext);
+

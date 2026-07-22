@@ -9,15 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-zinc-900 text-zinc-50 dark:bg-zinc-50 dark:text-zinc-900 shadow-sm shadow-black/5 hover:bg-zinc-900/90 dark:hover:bg-zinc-50/90",
+        default: "bg-[#204ecf] text-white hover:bg-[#1940b5] dark:bg-[#3b82f6] dark:hover:bg-[#2563eb] rounded-full shadow-[0_7px_29px_0px_rgba(100,100,111,0.2)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all font-semibold",
         destructive:
-          "bg-red-500 text-zinc-50 shadow-sm shadow-black/5 hover:bg-red-500/90 dark:bg-red-900 dark:text-zinc-50 dark:hover:bg-red-900/90",
+          "bg-red-600 text-white shadow-[0_7px_29px_0px_rgba(239,68,68,0.2)] hover:bg-red-700 dark:bg-red-700 dark:text-white rounded-full transition-all",
         outline:
-          "border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950 shadow-sm shadow-black/5 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50",
+          "border border-[#989b9f] bg-transparent text-zinc-900 dark:text-zinc-100 hover:border-[#204ecf] hover:text-[#204ecf] dark:hover:border-[#3b82f6] dark:hover:text-[#3b82f6] rounded-full shadow-none transition-all",
         secondary:
-          "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50 shadow-sm shadow-black/5 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/80",
-        ghost: "hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 text-zinc-900 dark:text-zinc-100",
-        link: "text-zinc-900 dark:text-zinc-50 underline-offset-4 hover:underline",
+          "bg-[#f1f1f0] text-[#08102b] dark:bg-[#2d2d30] dark:text-[#fffdfc] rounded-full shadow-[0_4px_15px_rgba(0,0,0,0.05)] hover:bg-[#e6e6e6] dark:hover:bg-[#3f3f46] transition-all",
+        ghost: "hover:bg-[#f1f1f0] hover:text-[#204ecf] dark:hover:bg-[#2d2d30] dark:hover:text-[#3b82f6] text-zinc-900 dark:text-zinc-100 rounded-full transition-all",
+        link: "text-[#204ecf] dark:text-[#3b82f6] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import Icon from "../Icon"
 
 const statusBadgeVariants = cva(
-  "inline-flex items-center gap-x-2.5 rounded-tremor-full bg-white dark:bg-zinc-900 px-2.5 py-1.5 text-tremor-label border border-zinc-200 dark:border-zinc-800 shadow-sm",
+  "inline-flex items-center gap-x-2.5 rounded-full bg-[#fffdfc] dark:bg-[#2d2d30] px-3 py-1.5 text-xs font-semibold border border-[#e6e6e6] dark:border-white/15 shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_3px_12px_rgba(0,0,0,0.15)] plusui-pill",
   {
     variants: {
       status: {

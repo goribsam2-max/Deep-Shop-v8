@@ -298,12 +298,30 @@ const Icon: React.FC<IconProps> = ({ name, className = '', solid = false, ...pro
         {...props}
       >
         <style dangerouslySetInnerHTML={{ __html: `
-          .custom-icon-container-${cleanName} svg * {
-            fill: ${isBrandOrSolid ? 'currentColor !important' : (solid ? 'rgba(28, 219, 94, 0.15) !important' : 'none !important')};
-            fill-opacity: ${isBrandOrSolid ? '1 !important' : (solid ? '1 !important' : '0 !important')};
-            stroke: ${isBrandOrSolid ? 'none !important' : 'currentColor !important'};
-            stroke-width: ${isBrandOrSolid ? '0 !important' : (solid ? '2.5px !important' : '2px !important')};
+          .custom-icon-container-${cleanName} svg path:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg line:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg circle:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg rect:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg polyline:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg polygon:not(.c):not(.svgC):not(.c1),
+          .custom-icon-container-${cleanName} svg g:not(.c):not(.svgC):not(.c1) > * {
+            fill: ${isBrandOrSolid ? 'currentColor' : (solid ? 'rgba(32, 78, 207, 0.15)' : 'none')};
+            fill-opacity: ${isBrandOrSolid ? '1' : (solid ? '1' : '0')};
+            stroke: ${isBrandOrSolid ? 'none' : 'currentColor'};
+            stroke-width: ${isBrandOrSolid ? '0' : (solid ? '2.5px' : '1.75px')};
             transition: fill 0.3s ease, fill-opacity 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease;
+          }
+          .custom-icon-container-${cleanName} svg .c,
+          .custom-icon-container-${cleanName} svg .svgC,
+          .custom-icon-container-${cleanName} svg .c1 {
+            stroke: var(--linkC, #204ecf) !important;
+            fill: none;
+            transition: stroke 0.3s ease, fill 0.3s ease;
+          }
+          .dark .custom-icon-container-${cleanName} svg .c,
+          .dark .custom-icon-container-${cleanName} svg .svgC,
+          .dark .custom-icon-container-${cleanName} svg .c1 {
+            stroke: var(--darkU, #3b82f6) !important;
           }
         `}} />
         <div 

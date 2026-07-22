@@ -157,54 +157,69 @@
         font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif !important;
       }
       :root {
-        --zinc-50: #faf6f0;
-        --zinc-100: #f4eedf;
-        --zinc-200: #eadfd1;
-        --zinc-900: #18181b;
-        --primary: #18181b;
+        --themeC: #482dff;
+        --headC: #08102b;
+        --bodyC: #08102b;
+        --bodyCa: #989b9f;
+        --bodyB: #fffdfc;
+        --linkC: #204ecf;
+        --linkB: #204ecf;
+        --waveB: #C6DAFC;
+        --iconC: #08102b;
+        --iconCa: #08102b;
+        --iconCs: #767676;
+        --headerC: #343435;
+        --headerB: #fffdfc;
+        --contentB: #fffdfc;
+        --contentL: #e6e6e6;
+        --notifU: #e8f0fe;
+        --notifC: #01579b;
+        --buttonR: 50px;
+        --greetR: 10px;
+        --iconHr: 15px;
+        --thumbEr: 5px;
+        --srchMr: 20px;
+        --srchDr: 20px;
+
+        --zinc-50: #fffdfc;
+        --zinc-100: #f4f4f5;
+        --zinc-200: #e6e6e6;
+        --zinc-900: #08102b;
+        --primary: #204ecf;
         --primary-foreground: #ffffff;
 
-        --context-card-border: hsla(0, 0%, 92%, 1);
-        --ds-gray-1000: hsla(0, 0%, 9%, 1);
-        --ds-gray-alpha-400: hsla(0, 0%, 0%, 0.08);
-        --ds-background-200: hsla(0, 0%, 98%, 1);
-        --ds-background-200-alpha-800: hsla(0, 0%, 98%, 0.8);
-        --accents-1: #fafafa;
-        --accents-2: #eaeaea;
-        --ds-background-100: hsla(0, 0%, 100%, 1);
+        --context-card-border: #e6e6e6;
+        --ds-gray-1000: #08102b;
+        --ds-gray-alpha-400: rgba(0, 0, 0, 0.05);
+        --ds-background-200: #f6f6f6;
+        --ds-background-200-alpha-800: rgba(255, 253, 252, 0.8);
+        --accents-1: #fffdfc;
+        --accents-2: #f1f1f0;
+        --ds-background-100: #fffdfc;
         --ds-overlay: rgba(0, 0, 0, 0.4);
-        --ds-shadow-border: 0 0 0 1px rgba(0, 0, 0, 0.08);
-        --ds-shadow-small: 0px 2px 2px rgba(0, 0, 0, 0.04);
-        --ds-shadow-border-small:
-          var(--ds-shadow-border), var(--ds-shadow-small);
-        --ds-shadow-medium:
-          0px 2px 2px rgba(0, 0, 0, 0.04), 0px 8px 8px -8px rgba(0, 0, 0, 0.04);
-        --ds-shadow-border-medium:
-          var(--ds-shadow-border), var(--ds-shadow-medium);
-        --ds-shadow-large:
-          0px 2px 2px rgba(0, 0, 0, 0.04), 0px 8px 16px -4px rgba(0, 0, 0, 0.04);
-        --ds-shadow-border-large:
-          var(--ds-shadow-border), var(--ds-shadow-large);
-        --ds-shadow-tooltip:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 4px 8px rgba(0, 0, 0, 0.04);
-        --ds-shadow-menu:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 4px 8px -4px rgba(0, 0, 0, 0.04),
-          0px 16px 24px -8px rgba(0, 0, 0, 0.06);
-        --ds-shadow-modal:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-          0px 24px 32px -8px rgba(0, 0, 0, 0.06);
-        --ds-shadow-fullscreen:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-          0px 24px 32px -8px rgba(0, 0, 0, 0.06);
+
+        /* Plus UI Box Shadow Palette */
+        --ds-shadow-card: 0 5px 35px rgba(0, 0, 0, 0.07);
+        --ds-shadow-button: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+        --ds-shadow-pill: 0 8px 25px 0 rgba(0, 0, 0, 0.1);
+        --ds-shadow-header: 0 0 15px rgba(0, 0, 0, 0.07);
+
+        --ds-shadow-border: 0 0 0 1px rgba(0, 0, 0, 0.07);
+        --ds-shadow-small: 0 5px 15px rgba(0, 0, 0, 0.05);
+        --ds-shadow-border-small: 0 5px 15px rgba(0, 0, 0, 0.07);
+        --ds-shadow-medium: 0 5px 35px rgba(0, 0, 0, 0.07);
+        --ds-shadow-border-medium: 0 5px 35px rgba(0, 0, 0, 0.07);
+        --ds-shadow-large: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        --ds-shadow-border-large: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        --ds-shadow-tooltip: 0 5px 20px 0 rgba(0, 0, 0, 0.1);
+        --ds-shadow-menu: 0 5px 35px rgba(0, 0, 0, 0.1);
+        --ds-shadow-modal: 0 5px 30px 0 rgba(0, 0, 0, 0.1);
+        --ds-shadow-fullscreen: 0 5px 35px rgba(0, 0, 0, 0.1);
       }
       body {
         font-family: "Satoshi", "Inter", sans-serif;
-        background-color: var(--zinc-50);
-        color: var(--zinc-900);
+        background-color: var(--bodyB);
+        color: var(--bodyC);
         user-select: none;
         scroll-behavior: smooth;
         overscroll-behavior-y: none;
@@ -219,51 +234,54 @@
       }
 
       img:not(.rounded-full):not(.no-rounded) {
-        border-radius: 15px;
+        border-radius: 12px;
       }
-      .dark body {
-        background-color: #000000;
-        color: #fafafa;
-        --primary: #fafafa;
-        --primary-foreground: #18181b;
+      .dark body, html.dark, .drK {
+        background-color: #1e1e1e !important;
+        color: #fffdfc !important;
+        --themeC: #1e1e1e;
+        --headC: #fffdfc;
+        --bodyC: #fffdfc;
+        --bodyCa: #989b9f;
+        --bodyB: #1e1e1e;
+        --linkC: #3b82f6;
+        --linkB: #3b82f6;
+        --darkU: #3b82f6;
+        --darkT: #fffdfc;
+        --darkTa: #989b9f;
+        --darkB: #1e1e1e;
+        --darkBa: #2d2d30;
+        --darkBs: #252526;
 
-        --context-card-border: hsla(0, 0%, 18%, 1);
-        --ds-gray-1000: hsla(0, 0%, 93%, 1);
-        --ds-gray-alpha-400: hsla(0, 0%, 100%, 0.14);
-        --ds-background-200: hsla(0, 0%, 0%, 1);
-        --ds-background-200-alpha-800: hsla(0, 0%, 0%, 0.8);
-        --accents-2: #333333;
-        --accents-1: #111111;
-        --ds-background-100: hsla(0, 0%, 4%, 1);
-        --ds-shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.145);
-        --ds-shadow-small: 0px 1px 2px rgba(0, 0, 0, 0.16);
-        --ds-shadow-border-small:
-          var(--ds-shadow-border), 0px 1px 2px rgba(0, 0, 0, 0.16);
-        --ds-shadow-medium:
-          0px 2px 2px rgba(0, 0, 0, 0.32), 0px 8px 8px -8px rgba(0, 0, 0, 0.16);
-        --ds-shadow-border-medium:
-          var(--ds-shadow-border), 0px 2px 2px rgba(0, 0, 0, 0.32),
-          0px 8px 8px -8px rgba(0, 0, 0, 0.16);
-        --ds-shadow-large:
-          0px 2px 2px rgba(0, 0, 0, 0.04), 0px 8px 16px -4px rgba(0, 0, 0, 0.04);
-        --ds-shadow-border-large:
-          var(--ds-shadow-border), 0px 2px 2px rgba(0, 0, 0, 0.04),
-          0px 8px 16px -4px rgba(0, 0, 0, 0.04);
-        --ds-shadow-tooltip:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 4px 8px rgba(0, 0, 0, 0.04);
-        --ds-shadow-menu:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 4px 8px -4px rgba(0, 0, 0, 0.04),
-          0px 16px 24px -8px rgba(0, 0, 0, 0.06);
-        --ds-shadow-modal:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-          0px 24px 32px -8px rgba(0, 0, 0, 0.06);
-        --ds-shadow-fullscreen:
-          var(--ds-shadow-border), 0px 1px 1px rgba(0, 0, 0, 0.02),
-          0px 8px 16px -4px rgba(0, 0, 0, 0.04),
-          0px 24px 32px -8px rgba(0, 0, 0, 0.06);
+        --primary: #3b82f6;
+        --primary-foreground: #ffffff;
+
+        --context-card-border: rgba(255, 255, 255, 0.15);
+        --ds-gray-1000: #fffdfc;
+        --ds-gray-alpha-400: rgba(255, 255, 255, 0.15);
+        --ds-background-200: #2d2d30;
+        --ds-background-200-alpha-800: rgba(45, 45, 48, 0.8);
+        --accents-2: #252526;
+        --accents-1: #1e1e1e;
+        --ds-background-100: #252526;
+
+        /* Plus UI Dark Mode Shadows */
+        --ds-shadow-card: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-button: 0 10px 40px rgba(0, 0, 0, 0.25);
+        --ds-shadow-pill: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-header: 0 10px 30px rgba(0, 0, 0, 0.2);
+
+        --ds-shadow-border: 0 0 0 1px rgba(255, 255, 255, 0.15);
+        --ds-shadow-small: 0 10px 25px rgba(0, 0, 0, 0.2);
+        --ds-shadow-border-small: 0 10px 25px rgba(0, 0, 0, 0.2);
+        --ds-shadow-medium: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-border-medium: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-large: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-border-large: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-tooltip: 0 10px 25px rgba(0, 0, 0, 0.2);
+        --ds-shadow-menu: 0 10px 40px rgba(0, 0, 0, 0.2);
+        --ds-shadow-modal: 0 10px 40px rgba(0, 0, 0, 0.25);
+        --ds-shadow-fullscreen: 0 10px 40px rgba(0, 0, 0, 0.25);
       }
       ::selection {
         background-color: var(--zinc-900);

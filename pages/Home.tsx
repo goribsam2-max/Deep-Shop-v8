@@ -696,7 +696,7 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
                <button 
                   onClick={handleLoadMore}
                   disabled={loadingMore}
-                  className="bg-black dark:bg-white text-white dark:text-black font-bold py-3 px-8 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center min-w-[150px]"
+                  className="btn-loadmore font-bold py-3.5 px-8 rounded-full shadow-[0_7px_29px_0px_rgba(100,100,111,0.2)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.3)] bg-[#204ecf] dark:bg-[#3b82f6] text-[#fffdfc] hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center min-w-[160px]"
                >
                  {loadingMore ? (
                     <motion.div

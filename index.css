@@ -88,35 +88,151 @@ html, body {
   transition: all 0.3s ease !important;
 }
 
-/* User's custom premium SVG coloring variables and rules */
+/* User's custom premium SVG & Plus UI XML variables */
 :root {
-  --linkC: #2563eb; /* Premium Royal Blue */
-  --darkU: #3b82f6; /* Premium Vibrant Blue */
-  --linkB: #2563eb;
-  --iconC: currentColor;
-  --iconCa: #2563eb;
-  --iconCs: rgba(59, 130, 246, 0.4);
+  --themeC: #482dff;
+  --headC: #08102b;
+  --bodyC: #08102b;
+  --bodyCa: #989b9f;
+  --bodyB: #fffdfc;
+  --linkC: #204ecf;
+  --linkB: #204ecf;
+  --waveB: #C6DAFC;
+  --iconC: #08102b;
+  --iconCa: #08102b;
+  --iconCs: #767676;
+  --headerC: #343435;
+  --headerB: #fffdfc;
+  --contentB: #fffdfc;
+  --contentL: #e6e6e6;
+  --notifU: #e8f0fe;
+  --notifC: #01579b;
+  --buttonR: 50px;
+  --greetR: 10px;
+  --iconHr: 15px;
+  --thumbEr: 5px;
+  --srchMr: 20px;
+  --srchDr: 20px;
+
+  --fotB: #fffdfc;
+  --fotT: #08102b;
+  --fotL: #e6e6e6;
 }
 
 .dark, .drK {
+  --themeC: #1e1e1e;
+  --headC: #fffdfc;
+  --bodyC: #fffdfc;
+  --bodyCa: #989b9f;
+  --bodyB: #1e1e1e;
   --linkC: #3b82f6;
-  --darkU: #60a5fa;
   --linkB: #3b82f6;
+  --darkU: #3b82f6;
+  --darkT: #fffdfc;
+  --darkTa: #989b9f;
+  --darkB: #1e1e1e;
+  --darkBa: #2d2d30;
+  --darkBs: #252526;
+  --contentB: #252526;
+  --contentL: rgba(255, 255, 255, 0.15);
+
+  --waveB: #1e293b;
+  --fotB: #252526;
+  --fotT: #fffdfc;
+  --fotL: rgba(255, 255, 255, 0.15);
 }
 
-/* Wave Animation & Premium Footer Styles */
-:root {
-  --waveB: #bfdbfe; /* Beautiful light blue wave contrast */
-  --fotB: #ffffff;
-  --fotT: #4b5563;
-  --fotL: #e5e7eb;
+/* Standard Plus UI XML Button styles */
+.button, .btn-plusui, .btn-loadmore, .blogN button, .blogN > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+  padding: 12px 20px;
+  outline: 0;
+  border: 0;
+  border-radius: var(--buttonR, 50px) !important;
+  line-height: 20px;
+  color: #fffdfc !important;
+  background: var(--linkB, #204ecf) !important;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px !important;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.dark, .drK {
-  --waveB: #1e293b; /* Beautiful slate blue wave contrast in dark mode */
-  --fotB: #09090b;
-  --fotT: #9ca3af;
-  --fotL: #1f2937;
+.button:hover, .btn-plusui:hover, .btn-loadmore:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.button:active, .btn-plusui:active, .btn-loadmore:active {
+  transform: translateY(0);
+}
+
+.button.ln, .btn-plusui-outline {
+  color: inherit !important;
+  background: transparent !important;
+  border: 1px solid var(--bodyCa, #989b9f) !important;
+  box-shadow: none !important;
+}
+
+.button.ln:hover, .btn-plusui-outline:hover {
+  border-color: var(--linkB, #204ecf) !important;
+  box-shadow: 0 0 0 1px var(--linkB, #204ecf) inset !important;
+  color: var(--linkC, #204ecf) !important;
+}
+
+.dark .button, .drK .button, .dark .btn-plusui, .drK .btn-plusui, .dark .btn-loadmore, .drK .btn-loadmore, .dark .blogN button, .dark .blogN > a {
+  background: var(--darkU, #3b82f6) !important;
+  color: #fffdfc !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .button.ln:hover, .drK .button.ln:hover {
+  border-color: var(--darkU, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--darkU, #3b82f6) inset !important;
+  color: var(--darkU, #3b82f6) !important;
+}
+
+/* Side Menu / Sidebar Buttons MUST NOT HAVE box shadow */
+.mnMn button, .mnMn a,
+.side-menu button, .side-menu a,
+.sidebar button, .sidebar a,
+aside button, aside a,
+[data-sidebar] button,
+header nav button,
+.sidebar-btn,
+.navI ~ * button,
+.navI ~ * a {
+  box-shadow: none !important;
+}
+
+/* Standard Plus UI XML Section & Card Box Shadows */
+.plusui-card, .plusui-section, .bX {
+  background: var(--contentB, #fffdfc);
+  border-radius: 12px;
+  box-shadow: 0 5px 35px rgba(0,0,0,.07) !important;
+}
+
+.dark .plusui-card, .dark .plusui-section, .dark .bX,
+.drK .plusui-card, .drK .plusui-section, .drK .bX {
+  background: var(--darkBa, #2d2d30);
+  box-shadow: 0 10px 40px rgba(0,0,0,.2) !important;
+}
+
+/* Plus UI Pill shapes & Pill Box Shadows (Product details pills, tags, badges) */
+.plusui-pill, .pill-shape, .badge-pill, .product-pill, .p-pill, .variant-pill, .tfxC > * {
+  border-radius: var(--buttonR, 50px) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+}
+
+.dark .plusui-pill, .dark .pill-shape, .dark .badge-pill, .dark .product-pill, .dark .p-pill, .dark .variant-pill, .dark .tfxC > *,
+.drK .plusui-pill, .drK .pill-shape, .drK .badge-pill, .drK .product-pill, .drK .p-pill, .drK .variant-pill, .drK .tfxC > * {
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .wvC {
@@ -200,20 +316,47 @@ svg.line, svg .line {
   stroke-width: 1.5px;
 }
 
-/* svgc/svgC class paths */
-svg .svgC {
+/* svgc/svgC/c/c1 class paths for dual-color SVG accents */
+svg .svgC, svg .c, svg .c1 {
   fill: var(--linkC) !important;
+  transition: all 0.3s ease;
 }
-svg.line .svgC {
+svg.line .svgC, svg.line .c, svg.line .c1, svg .line.svgC, svg .line.c {
   fill: none !important;
   stroke: var(--linkC) !important;
+  transition: all 0.3s ease;
 }
-.dark svg .svgC, .drK svg .svgC {
+.dark svg .svgC, .dark svg .c, .dark svg .c1, .drK svg .svgC, .drK svg .c, .drK svg .c1 {
   fill: var(--darkU) !important;
 }
-.dark svg.line .svgC, .drK svg.line .svgC {
+.dark svg.line .svgC, .dark svg.line .c, .dark svg.line .c1,
+.dark svg .line.svgC, .dark svg .line.c,
+.drK svg.line .svgC, .drK svg.line .c, .drK svg.line .c1,
+.drK svg .line.svgC, .drK svg .line.c {
   fill: none !important;
   stroke: var(--darkU) !important;
+}
+
+/* Hide Google Translate top toolbar and branding frames */
+body {
+  top: 0px !important;
+  position: relative !important;
+}
+.goog-te-banner-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt,
+.goog-te-spinner-pos,
+.skiptranslate,
+#google_translate_element {
+  display: none !important;
+  visibility: hidden !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+.translated-ltr body, .translated-rtl body {
+  font-family: inherit !important;
 }
 
 /* XML Note Style definitions with complete dark mode support */
