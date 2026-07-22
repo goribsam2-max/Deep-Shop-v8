@@ -294,13 +294,19 @@ export function Header() {
 
     if (open && typeof window !== "undefined" && window.innerWidth < 768) {
       document.body.style.overflow = "hidden";
+      document.body.style.overflowX = "hidden";
+      document.documentElement.style.overflowX = "hidden";
     } else {
       document.body.style.overflow = "";
+      document.body.style.overflowX = "";
+      document.documentElement.style.overflowX = "";
     }
     return () => {
       if (unsubscribeAuth) unsubscribeAuth();
       if (unsubscribeChats) unsubscribeChats();
       document.body.style.overflow = "";
+      document.body.style.overflowX = "";
+      document.documentElement.style.overflowX = "";
     };
   }, [open]);
 
@@ -334,6 +340,13 @@ export function Header() {
               triggerHaptic();
               if (location.pathname === '/withdraw') {
                   navigate('/affiliate');
+              } else if (location.pathname.startsWith('/messages')) {
+                const params = new URLSearchParams(location.search);
+                if (params.has('chatId') || params.has('channelId') || params.get('tab') === 'settings') {
+                  navigate('/messages');
+                } else {
+                  navigate(-1);
+                }
               } else if (isInnerPage) {
                 navigate(-1);
               } else {
@@ -370,7 +383,7 @@ export function Header() {
             className={buttonClass}
             aria-label="Search"
           >
-            <Search className="w-5 h-5" />
+            <Icon name="search" className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
@@ -421,18 +434,6 @@ export function Header() {
               )}
             </Button>
             <AnimatedThemeToggler className="rounded-full shadow-none border-none bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 w-9 h-9 text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                triggerHaptic();
-                navigate("/notifications");
-              }}
-              className="rounded-full shadow-none border-none bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 w-9 h-9 text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-            </Button>
             {location.pathname !== "/profile" && (
               <AccountMenu scrolled={scrolled} isPill />
             )}
@@ -475,18 +476,7 @@ export function Header() {
               )}
             </Button>
             <AnimatedThemeToggler className="rounded-full shadow-none border-none bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 w-9 h-9 flex text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white" />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                triggerHaptic();
-                navigate("/notifications");
-              }}
-              className="hidden sm:flex rounded-full shadow-none border-none bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800 w-9 h-9 text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-            </Button>
+
             {location.pathname !== "/profile" && (
               <AccountMenu scrolled={scrolled} isPill />
             )}

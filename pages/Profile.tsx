@@ -286,14 +286,14 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
           <div className="absolute top-20 right-8 w-10 h-10 bg-[#1cdb5e]/20" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}></div>
           <div className="absolute bottom-12 right-0 w-20 h-20 bg-[#1cdb5e]/10 rounded-full translate-x-1/2 pointer-events-none"></div>
           
-          <div className="flex justify-between items-center relative z-20 mb-8 max-w-lg mx-auto">
+          <div className="flex justify-between items-center relative z-20 mb-8 max-w-lg md:max-w-4xl lg:max-w-5xl mx-auto">
               <h2 className="text-white text-2xl font-bold tracking-tight">Profile</h2>
               <button onClick={() => navigate('/settings')} className="w-10 h-10 border-2 border-white/50 hover:bg-white/10 rounded-full flex items-center justify-center transition-colors shadow-sm">
                   <MoreVertical className="text-white w-5 h-5" />
               </button>
           </div>
           
-          <div className="relative z-20 flex flex-col items-center max-w-lg mx-auto text-center">
+          <div className="relative z-20 flex flex-col items-center max-w-lg md:max-w-4xl lg:max-w-5xl mx-auto text-center">
               <div className="relative inline-block mt-4 mb-3">
                  <AvatarUploader onUpload={handleAvatarUpload}>
                      <Avatar className="w-24 h-24 rounded-full border-[4px] border-[#0a2e15] object-cover bg-white cursor-pointer shadow-xl relative z-10">
@@ -337,8 +337,8 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
           </div>
       </div>
 
-      <div className="-mt-10 px-4 md:px-6 relative z-30 max-w-lg lg:max-w-4xl mx-auto pb-8 space-y-6">
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-[32px] p-5 sm:p-6 shadow-xl border border-gray-100 dark:border-zinc-800">
+      <div className="-mt-10 px-4 md:px-6 relative z-30 max-w-lg md:max-w-4xl lg:max-w-5xl mx-auto pb-8 space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0 md:items-start">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-[32px] p-5 sm:p-6 shadow-xl border border-gray-100 dark:border-zinc-800 md:col-span-2">
               <div className="flex items-center justify-between mb-5 px-1">
                   <h4 className="text-[15px] font-bold text-zinc-900 dark:text-white tracking-tight">My Orders</h4>
                   <span onClick={() => navigate('/orders')} className="text-sm font-semibold text-zinc-500 cursor-pointer hover:underline">View All</span>
@@ -397,7 +397,7 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
           <div id="profile-referral" onClick={() => {
               if (!localUserData) navigate("/auth-selector");
               else navigate("/affiliate");
-            }} className="bg-gradient-to-r from-[#FF6611] to-[#FF8C00] rounded-[32px] shadow-xl p-6 relative overflow-hidden flex flex-col justify-center cursor-pointer w-full text-white">
+            }} className="bg-gradient-to-r from-[#FF6611] to-[#FF8C00] rounded-[32px] shadow-xl p-6 relative overflow-hidden flex flex-col justify-center cursor-pointer w-full text-white md:col-span-2 md:mt-6">
               <div className="relative z-10 w-2/3">
                   <h3 className="font-bold text-[20px] mb-2 leading-tight">
                     {!localUserData ? 'Log in to refer & earn' : localUserData.affiliateStatus !== 'approved' ? 'Apply for partner to earn' : 'Refer a friend'}
@@ -486,7 +486,7 @@ const Profile: React.FC<{ userData: UserProfile | null }> = ({
               </div>
           </div>
           
-          <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-2 sm:p-3 shadow-md border border-gray-100 dark:border-zinc-800">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-[20px] p-2 sm:p-3 shadow-md border border-gray-100 dark:border-zinc-800 md:col-span-2 md:mt-6">
              <div 
                 onClick={handleLogout}
                 className="flex items-center justify-between p-3 cursor-pointer rounded-xl"

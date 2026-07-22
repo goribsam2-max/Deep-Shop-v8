@@ -195,7 +195,7 @@ export default function Messages() {
     return () => unsub();
   }, []);
 
-  const [activeMessagesTab, setActiveMessagesTab] = useState<'chats' | 'settings'>('chats');
+  // activeMessagesTab is now synchronized with search parameter tab=settings
   const [isOnlineSectionVisible, setIsOnlineSectionVisible] = useState(true);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [privacySettings, setPrivacySettings] = useState({
@@ -242,6 +242,18 @@ export default function Messages() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const chatIdParam = searchParams.get('chatId');
+  const activeMessagesTab = searchParams.get('tab') === 'settings' ? 'settings' : 'chats';
+  const setActiveMessagesTab = (tab: 'chats' | 'settings') => {
+    const newParams = new URLSearchParams(searchParams);
+    if (tab === 'settings') {
+      newParams.set('tab', 'settings');
+      newParams.delete('chatId');
+      newParams.delete('channelId');
+    } else {
+      newParams.delete('tab');
+    }
+    setSearchParams(newParams);
+  };
 
   const [chats, setChats] = useState<any[]>([]);
   const [tempActiveChat, setTempActiveChat] = useState<any | null>(null);
@@ -249,7 +261,7 @@ export default function Messages() {
   
   // Derived activeChat
   const activeChat = chatIdParam 
-    ? (chats.find(c => c.otherUser?.id === chatIdParam) || tempActiveChat)
+    ? (chats.find(c => c.otherUser?.id === chatIdParam || c.id === chatIdParam) || tempActiveChat)
     : null;
 
   const [showPrivateChatMenu, setShowPrivateChatMenu] = useState(false);
@@ -1642,7 +1654,7 @@ const handleCreateChannel = async () => {
       return;
     }
 
-    const existingChat = chats.find(c => c.otherUser?.id === chatIdParam);
+    const existingChat = chats.find(c => c.otherUser?.id === chatIdParam || c.id === chatIdParam);
     if (existingChat) {
       setTempActiveChat(null);
       return;
@@ -2765,17 +2777,6 @@ const handleCreateChannel = async () => {
             : "bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800"
       )}>
           <div className="flex flex-col items-center gap-6 w-full">
-              {/* Back Button */}
-              <button 
-                  onClick={() => navigate(-1)}
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/40 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition active:scale-95 shadow-sm"
-                  title="Back"
-              >
-                  <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              <div className="w-8 border-t border-zinc-100 dark:border-zinc-800/80 my-1" />
-
               {/* Chats Tab */}
               <button 
                   onClick={() => setActiveMessagesTab('chats')}
@@ -2787,7 +2788,7 @@ const handleCreateChannel = async () => {
                   )}
                   title="Chats"
               >
-                  <Icon name="message-circle" className="w-5 h-5" solid={activeMessagesTab === 'chats'} />
+                  <Icon name="message-circle" className="w-5 h-5" solid={false} />
                   {activeMessagesTab === 'chats' && (
                       <div className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-600 dark:bg-indigo-400 rounded-r-full" />
                   )}
@@ -2804,7 +2805,7 @@ const handleCreateChannel = async () => {
                   )}
                   title="Settings"
               >
-                  <Icon name="settings" className="w-5 h-5" solid={activeMessagesTab === 'settings'} />
+                  <Icon name="settings" className="w-5 h-5" solid={false} />
                   {activeMessagesTab === 'settings' && (
                       <div className="absolute left-0 top-3 bottom-3 w-1 bg-indigo-600 dark:bg-indigo-400 rounded-r-full" />
                   )}
@@ -2819,7 +2820,9 @@ const handleCreateChannel = async () => {
       
       {/* Sidebar: Chat List */}
       <div className={cn(
-          "w-full md:w-[350px] border-r flex flex-col relative transition-all duration-300",
+          activeMessagesTab === 'settings' 
+            ? "w-full md:w-full border-r flex flex-col relative transition-all duration-300" 
+            : "w-full md:w-[350px] border-r flex flex-col relative transition-all duration-300",
           privacySettings.liquidGlassMode 
             ? "bg-white/45 dark:bg-zinc-900/40 backdrop-blur-xl border-white/20 dark:border-zinc-800/30" 
             : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
@@ -2829,11 +2832,17 @@ const handleCreateChannel = async () => {
          <div className="p-5 pb-3 flex flex-col gap-4">
              <div className="flex items-center justify-between">
                  <div className="flex items-center gap-1.5 min-w-0">
-                     <button 
-                         onClick={() => navigate(-1)} 
-                         className="p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 transition shrink-0 active:scale-95"
-                         title="Back"
-                     >
+                      <button 
+                          onClick={() => {
+                              if (activeMessagesTab === 'settings') {
+                                  setActiveMessagesTab('chats');
+                              } else {
+                                  navigate(-1);
+                              }
+                          }} 
+                          className="md:hidden p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 transition shrink-0 active:scale-95"
+                          title="Back"
+                      >
                          <ChevronLeft className="w-6 h-6" />
                      </button>
                      <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight truncate leading-tight">
@@ -2890,7 +2899,7 @@ const handleCreateChannel = async () => {
 
          {/* Active Stories Row */}
                   {activeMessagesTab === 'settings' ? (
-             <div className="flex-1 overflow-y-auto p-5 space-y-6">
+             <div className="flex-1 overflow-y-auto p-5 space-y-6 md:max-w-4xl md:mx-auto md:w-full">
                  {/* Premium User Card in Settings */}
                  <div className="bg-zinc-50 dark:bg-zinc-800/20 border border-zinc-200/50 dark:border-zinc-700/30 rounded-3xl p-5 flex items-center gap-4">
                      <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-indigo-100 shadow-sm shrink-0">
@@ -2905,8 +2914,9 @@ const handleCreateChannel = async () => {
                      </div>
                  </div>
 
-                 {/* Settings Sections */}
-                 <div className="space-y-4">
+                                   {/* Settings Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 space-y-0 items-start">
+                      <div className="space-y-4">
                      <h3 className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1">
                          Privacy & Security
                      </h3>
@@ -3021,9 +3031,12 @@ const handleCreateChannel = async () => {
                         </button>
                       </div>
 
-                      {/* --- MORE DESIGN --- */}
-                      <h3 className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 pt-4">
-                          Visual Design Settings
+                      </div>
+
+                      <div className="space-y-4">
+                          {/* --- MORE DESIGN --- */}
+                          <h3 className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest ml-1 pt-4 md:pt-0">
+                              Visual Design Settings
                       </h3>
 
                       {/* Liquid Glass Mode Toggle */}
@@ -3203,6 +3216,7 @@ const handleCreateChannel = async () => {
                           />
                         </button>
                       </div>
+                  </div>
                   </div>
 
                   {/* App Version Info */}
@@ -3559,32 +3573,32 @@ const handleCreateChannel = async () => {
 				<button 
 					onClick={() => setActiveMessagesTab('chats')}
 					className={cn(
-						"flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all relative overflow-hidden",
-						activeMessagesTab === 'chats' 
-							? "text-[#EF8020] bg-[#EF8020]/10 border border-[#EF8020]/20 shadow-sm shadow-[#EF8020]/5 scale-105" 
-							: "text-zinc-400 hover:text-zinc-600 dark:hover:text-[#EF8020]/60 hover:bg-zinc-500/5"
+						"flex flex-col items-center gap-1 py-1 px-3 transition-all relative overflow-hidden",
+						activeMessagesTab === 'chats' ? "text-[#EF8020] scale-105" : "text-zinc-400 hover:text-zinc-600"
 					)}
 				>
-					<Icon name="message-circle" className={cn("w-5 h-5 transition-transform duration-200", activeMessagesTab !== 'chats' && "inactive-nav-icon")} solid={activeMessagesTab === 'chats'} style={{ transform: activeMessagesTab === 'chats' ? 'scale(1.1)' : 'scale(1)' }} />
+					<div className={cn(
+						"w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 mb-0.5",
+						activeMessagesTab === 'chats' ? "bg-[#EF8020]/10 dark:bg-[#EF8020]/25" : ""
+					)}>
+						<Icon name="message-circle" className={cn("w-5 h-5 transition-transform duration-200", activeMessagesTab !== 'chats' && "inactive-nav-icon")} solid={false} style={{ transform: activeMessagesTab === 'chats' ? 'scale(1.1)' : 'scale(1)' }} />
+					</div>
 					<span className="text-[10px] font-bold tracking-wider">Chats</span>
-					{activeMessagesTab === 'chats' && (
-						<span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#EF8020] animate-pulse shadow-sm" />
-					)}
 				</button>
 				<button 
 					onClick={() => setActiveMessagesTab('settings')}
 					className={cn(
-						"flex flex-col items-center gap-1 py-1.5 px-4 rounded-2xl transition-all relative overflow-hidden",
-						activeMessagesTab === 'settings' 
-							? "text-[#EF8020] bg-[#EF8020]/10 border border-[#EF8020]/20 shadow-sm shadow-[#EF8020]/5 scale-105" 
-							: "text-zinc-400 hover:text-zinc-600 dark:hover:text-[#EF8020]/60 hover:bg-zinc-500/5"
+						"flex flex-col items-center gap-1 py-1 px-3 transition-all relative overflow-hidden",
+						activeMessagesTab === 'settings' ? "text-[#EF8020] scale-105" : "text-zinc-400 hover:text-zinc-600"
 					)}
 				>
-					<Icon name="settings" className={cn("w-5 h-5 transition-transform duration-200", activeMessagesTab !== 'settings' && "inactive-nav-icon")} solid={activeMessagesTab === 'settings'} style={{ transform: activeMessagesTab === 'settings' ? 'scale(1.1)' : 'scale(1)' }} />
+					<div className={cn(
+						"w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 mb-0.5",
+						activeMessagesTab === 'settings' ? "bg-[#EF8020]/10 dark:bg-[#EF8020]/25" : ""
+					)}>
+						<Icon name="settings" className={cn("w-5 h-5 transition-transform duration-200", activeMessagesTab !== 'settings' && "inactive-nav-icon")} solid={false} style={{ transform: activeMessagesTab === 'settings' ? 'scale(1.1)' : 'scale(1)' }} />
+					</div>
 					<span className="text-[10px] font-bold tracking-wider">Settings</span>
-					{activeMessagesTab === 'settings' && (
-						<span className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-[#EF8020] animate-pulse shadow-sm" />
-					)}
 				</button>
 			</div>
 
@@ -3596,7 +3610,7 @@ const handleCreateChannel = async () => {
           privacySettings.liquidGlassMode 
             ? "bg-white/10 dark:bg-black/25 backdrop-blur-md" 
             : "bg-[#F0F2F5] dark:bg-[#0a0a0a]",
-          (!activeChat && !activeChannel) ? 'hidden md:flex' : 'flex'
+          activeMessagesTab === 'settings' ? 'hidden' : (!activeChat && !activeChannel ? 'hidden md:flex' : 'flex')
       )}>
          {activeChannel ? (
              isUserBanned ? (

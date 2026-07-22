@@ -17,7 +17,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { OrderStatus } from "../../types";
 import { uploadToImgbb } from "../../services/imgbb";
 import { useNotify, useConfirm } from "../../components/Notifications";
-import { formatPrice } from "../../lib/utils";
+import { formatPrice, cn } from "../../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Icon from "../../components/Icon";
 import {
@@ -695,18 +695,20 @@ const SellerDashboard: React.FC = () => {
         onClick={() => { setActiveTab(tab); setSelectedOrderId(null); }}
         className="flex flex-col items-center justify-center flex-1 h-full relative group py-2"
       >
-        {isActive && (
-          <div className="absolute top-0 w-8 h-[3px] bg-[#EF8020] rounded-b-full"></div>
-        )}
         <div className="relative flex flex-col items-center justify-center">
           <div className="relative">
-            <Icon 
-              name={icon}
-              className={`w-5.5 h-5.5 mb-1 transition-all duration-300 ${isActive ? "text-[#EF8020] scale-110" : "inactive-nav-icon text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:text-zinc-300"}`} 
-              solid={isActive}
-            />
+            <div className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+              isActive ? "bg-[#EF8020]/10 dark:bg-[#EF8020]/25 text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+            )}>
+              <Icon 
+                name={icon}
+                className={cn("w-5 h-5 transition-transform duration-300", isActive && "scale-110")} 
+                solid={false}
+              />
+            </div>
             {badge !== undefined && badge > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-orange-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[14px] h-[14px] flex items-center justify-center leading-none">
+              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[14px] h-[14px] flex items-center justify-center leading-none">
                 {badge}
               </span>
             )}
@@ -802,7 +804,7 @@ const SellerDashboard: React.FC = () => {
           </button>
 
           <button onClick={() => { setActiveTab("settings_store"); setSelectedOrderId(null); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab.startsWith("settings") ? "bg-[#EF8020]/10 text-[#EF8020]" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"}`}>
-            <Icon name="sliders-h" className={`w-5 h-5 ${activeTab.startsWith("settings") ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} /> Settings
+            <Icon name="cog" className={`w-5 h-5 ${activeTab.startsWith("settings") ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} /> Settings
           </button>
         </nav>
       </aside>
@@ -1936,13 +1938,13 @@ const SellerDashboard: React.FC = () => {
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 dark:border-zinc-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50 px-2 sm:px-6 py-2 pb-safe flex justify-between items-center">
-        <NavItem icon="chart-line" label="Home" tab="home" />
+        <NavItem icon="home" label="Home" tab="home" />
         <NavItem icon="receipt" label="Orders" tab="orders" badge={orders.filter((o: any) => o.status === "pending").length} />
         <NavItem icon="boxes" label="Products" tab="products" />
         {sellerProfile?.canUseCourierShipping && <NavItem icon="truck" label="Due" tab="courier_dues" badge={orders.filter((o: any) => o.courierPaymentStatus === 'checking').length > 0 ? orders.filter((o: any) => o.courierPaymentStatus === 'checking').length : undefined} />}
         <NavItem icon="wallet" label="Custom Pay" tab="custom_payments" badge={customPayments.filter((p: any) => p.status === "pending").length} />
         <NavItem icon="sync-alt" label="Exchange" tab="exchanges" badge={exchanges.filter((e: any) => e.status === "pending").length} />
-        <NavItem icon="sliders-h" label="Settings" tab="settings_store" />
+        <NavItem icon="cog" label="Settings" tab="settings_store" />
       </div>
       
       {/* Safe area spacing for mobile browsers */}

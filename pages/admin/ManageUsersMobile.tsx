@@ -8,7 +8,7 @@ import {
   deleteDoc, 
   where 
 } from "firebase/firestore";
-import { db } from "../../firebase";
+import { db, auth } from "../../firebase";
 import { UserProfile, Order } from "../../types";
 import { useNotify } from "../../components/Notifications";
 import { useNavigate } from "react-router-dom";
@@ -91,6 +91,32 @@ const ManageUsersMobile: React.FC = () => {
     } catch (err) {
       console.error(err);
       notify("Failed to delete order", "error");
+    }
+  };
+
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+
+  const handleDeleteUser = async (uid: string) => {
+    try {
+      await deleteDoc(doc(db, "users", uid));
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        await fetch("/api/admin/delete-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid, adminToken: token }),
+        });
+      } catch (e) {
+        console.warn("Auth deletion warning:", e);
+      }
+      notify("User deleted successfully from database", "success");
+      setUserToDelete(null);
+      if (selectedUser?.uid === uid) {
+        setSelectedUser(null);
+      }
+    } catch (err) {
+      console.error(err);
+      notify("Failed to delete user", "error");
     }
   };
 
@@ -292,6 +318,33 @@ const ManageUsersMobile: React.FC = () => {
                 </h4>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{selectedUser.email}</p>
                 <p className="text-[10px] text-zinc-400 mt-1">UID: {selectedUser.uid}</p>
+
+                <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 w-full flex justify-center">
+                  {userToDelete === selectedUser.uid ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-red-500">Confirm DB Delete?</span>
+                      <button
+                        onClick={() => handleDeleteUser(selectedUser.uid)}
+                        className="px-3 py-1.5 bg-red-600 text-white text-xs font-bold rounded-xl"
+                      >
+                        Yes, Delete
+                      </button>
+                      <button
+                        onClick={() => setUserToDelete(null)}
+                        className="px-3 py-1.5 bg-zinc-200 dark:bg-zinc-800 text-xs font-bold rounded-xl"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setUserToDelete(selectedUser.uid)}
+                      className="px-4 py-2 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900 rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-red-100 transition-colors"
+                    >
+                      <Trash2 size={14} /> Delete User from Database
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Contact & Extra Details List */}

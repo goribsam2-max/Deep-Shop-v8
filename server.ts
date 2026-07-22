@@ -629,6 +629,53 @@ app.use(async (req, res, next) => {
     }
   });
 
+  app.post("/api/admin/delete-user", express.json(), async (req, res) => {
+    try {
+      if (!admin.apps?.length) {
+        return res
+          .status(500)
+          .json({
+            error:
+              "Firebase Admin not initialized. Please add FIREBASE_SERVICE_ACCOUNT to your environment variables.",
+          });
+      }
+      const { uid, adminToken } = req.body;
+
+      if (!adminToken) return res.status(401).json({ error: "Unauthorized" });
+
+      const decodedToken = await admin.auth().verifyIdToken(adminToken);
+      const adminDoc = await getFirestore()
+        .collection("users")
+        .doc(decodedToken.uid)
+        .get();
+      if (
+        !adminDoc.exists ||
+        (adminDoc.data()?.role !== "admin" &&
+          adminDoc.data()?.role !== "staff" &&
+          decodedToken.email !== "admin@vibe.shop")
+      ) {
+        return res
+          .status(403)
+          .json({ error: "Forbidden. Admin access required." });
+      }
+
+      // Delete user document from Firestore
+      await getFirestore().collection("users").doc(uid).delete();
+
+      // Delete user from Firebase Authentication if possible
+      try {
+        await admin.auth().deleteUser(uid);
+      } catch (authErr) {
+        console.warn("User auth deletion warning:", authErr);
+      }
+
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error(e);
+      res.status(500).json({ error: String(e.message || e) });
+    }
+  });
+
   // NEW: Lookup user Auth Email by secondary email or phone
   app.post("/api/lookup-auth-email", express.json(), async (req, res) => {
     try {
@@ -1162,10 +1209,10 @@ export async function initializeAppAsync() {
             .get();
           if (seoSnap.exists) {
             const data = seoSnap.data() as any;
-            const title = data.metaTitle || "DEEP SHOP | #1 Trusted Platform for Border Cross Mobiles";
+            const title = data.metaTitle || "DEEP SHOP - border cross devices, border cross products, illegal products buy sell site";
             const description =
               data.metaDescription ||
-              "DEEP SHOP - Discover premium border cross phones, original mobiles & accessories.";
+              "border cross devices, border cross products, illegal products buy sell site";
             const imageUrl =
               data.metaImage || "/favicon.png";
 

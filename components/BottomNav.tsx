@@ -37,8 +37,13 @@ const BottomNav: React.FC = () => {
     { to: "/profile", iconKey: "user", label: "Profile" },
   ];
 
-  // Hide BottomNav on product detail pages where the custom action bar takes over
-  if (location.pathname.startsWith("/product/")) {
+  // Hide BottomNav on product detail pages, messages, and seller routes
+  if (
+    location.pathname.startsWith("/product/") ||
+    location.pathname.startsWith("/messages") ||
+    location.pathname.startsWith("/seller") ||
+    location.pathname.startsWith("/admin")
+  ) {
     return null;
   }
 
@@ -55,22 +60,21 @@ const BottomNav: React.FC = () => {
                 onClick={() => triggerHaptic()}
                 className="flex flex-col items-center justify-center flex-1 h-full relative group"
               >
-                {isActive && (
-                  <div className="absolute top-0 w-8 h-[3px] bg-[#1cdb5e] rounded-b-full"></div>
-                )}
                 <div className="relative flex items-center justify-center">
-                  <Icon
-                    name={link.iconKey}
-                    className={`w-5 h-5 mb-1 transition-all duration-300 ${isActive ? "text-[#1cdb5e] scale-110" : "inactive-nav-icon text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"}`}
-                    solid={isActive}
-                  />
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 mb-0.5 ${isActive ? "bg-[#1cdb5e]/10 dark:bg-[#1cdb5e]/20 text-[#1cdb5e]" : "text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"}`}>
+                    <Icon
+                      name={link.iconKey}
+                      className={`w-5 h-5 transition-transform duration-300 ${isActive ? "scale-110" : "inactive-nav-icon"}`}
+                      solid={false}
+                    />
+                  </div>
                   {link.to === "/cart" && cartCount > 0 && (
-                    <span className="absolute -top-1 -right-2 bg-[#1cdb5e] text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white dark:border-zinc-900 shadow-sm">
+                    <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full border border-white dark:border-zinc-900 shadow-sm">
                       {cartCount}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] font-semibold ${isActive ? "text-[#1cdb5e]" : "text-zinc-400"}`}>
+                <span className={`text-[10px] font-bold tracking-tight transition-colors duration-300 ${isActive ? "text-[#1cdb5e]" : "text-zinc-400"}`}>
                   {link.label}
                 </span>
               </NavLink>

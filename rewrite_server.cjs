@@ -147,10 +147,10 @@ export async function initializeAppAsync() {
             .get();
           if (seoSnap.exists) {
             const data = seoSnap.data() as any;
-            const title = data.metaTitle || "DEEP SHOP | #1 Trusted Platform for Border Cross Mobiles";
+            const title = data.metaTitle || "DEEP SHOP - border cross devices, border cross products, illegal products buy sell site";
             const description =
               data.metaDescription ||
-              "DEEP SHOP - Discover premium border cross phones, original mobiles & accessories.";
+              "border cross devices, border cross products, illegal products buy sell site";
             const imageUrl =
               data.metaImage || "/favicon.png";
 

@@ -7,6 +7,7 @@ import {
   getDoc,
   query,
   orderBy,
+  deleteDoc,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase";
 import { UserProfile } from "../../types";
@@ -69,6 +70,39 @@ const ManageUsers: React.FC = () => {
   const toggleBan = async (uid: string, currentStatus: boolean) => {
     await updateDoc(doc(db, "users", uid), { isBanned: !currentStatus });
     notify(currentStatus ? "User unblocked" : "User blocked", "info");
+  };
+
+  const handleDeleteUser = async (uid: string, userDisplayName?: string) => {
+    confirm({
+      title: "Delete User",
+      message: `Are you sure you want to delete user "${userDisplayName || uid}" directly from the database?`,
+      onConfirm: async () => {
+        try {
+          // Delete from Firestore
+          await deleteDoc(doc(db, "users", uid));
+
+          // Attempt server side Auth deletion
+          try {
+            const token = await auth.currentUser?.getIdToken();
+            await fetch("/api/admin/delete-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ uid, adminToken: token }),
+            });
+          } catch (e) {
+            console.warn("Auth deletion failed on server:", e);
+          }
+
+          notify("User deleted successfully from database", "success");
+          if (detailModal.user && detailModal.user.uid === uid) {
+            setDetailModal({ isOpen: false, user: null });
+          }
+        } catch (err: any) {
+          console.error("Delete user error:", err);
+          notify("Failed to delete user: " + (err?.message || err), "error");
+        }
+      },
+    });
   };
 
   const [userPasswordReset, setUserPasswordReset] = useState<string>("");
@@ -572,6 +606,16 @@ const ManageUsers: React.FC = () => {
                   className="text-xs"
                 />
               </button>
+              <button
+                onClick={() => handleDeleteUser(user.uid, user.displayName)}
+                className="flex items-center justify-center size-8 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900 transition-colors"
+                title="Delete User from Database"
+              >
+                <Icon
+                  name="trash"
+                  className="text-xs"
+                />
+              </button>
             </div>
           </motion.div>
         ))}
@@ -948,23 +992,32 @@ const ManageUsers: React.FC = () => {
                     )}
                   </p>
                 </div>
-                <button
-                  onClick={async () => {
-                    const nextStatus = !detailModal.user!.isBanned;
-                    await toggleBan(detailModal.user!.uid, detailModal.user!.isBanned);
-                    setDetailModal({
-                      ...detailModal,
-                      user: { ...detailModal.user!, isBanned: nextStatus }
-                    });
-                  }}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-white ${
-                    detailModal.user.isBanned
-                      ? "bg-emerald-600 hover:bg-emerald-500"
-                      : "bg-red-600 hover:bg-red-500"
-                  }`}
-                >
-                  {detailModal.user.isBanned ? "Unban / Unblock User" : "Ban / Block User"}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={async () => {
+                      const nextStatus = !detailModal.user!.isBanned;
+                      await toggleBan(detailModal.user!.uid, detailModal.user!.isBanned);
+                      setDetailModal({
+                        ...detailModal,
+                        user: { ...detailModal.user!, isBanned: nextStatus }
+                      });
+                    }}
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all text-white ${
+                      detailModal.user.isBanned
+                        ? "bg-emerald-600 hover:bg-emerald-500"
+                        : "bg-red-600 hover:bg-red-500"
+                    }`}
+                  >
+                    {detailModal.user.isBanned ? "Unban / Unblock User" : "Ban / Block User"}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(detailModal.user!.uid, detailModal.user!.displayName)}
+                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                  >
+                    <Icon name="trash" className="text-xs" />
+                    Delete User From DB
+                  </button>
+                </div>
               </div>
             </div>
 

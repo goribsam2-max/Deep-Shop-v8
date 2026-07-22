@@ -295,12 +295,12 @@ export function AccountSettings() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-center px-6 py-6 sticky top-0 z-50 bg-[#F0F2F5]/80 dark:bg-zinc-950/80 backdrop-blur-md">
-        <h1 className="text-lg font-bold">Settings</h1>
+      {/* Page Title */}
+      <div className="max-w-md md:max-w-4xl lg:max-w-5xl mx-auto px-5 pt-6">
+        <h1 className="text-2xl font-extrabold text-zinc-900 dark:text-white">Settings</h1>
       </div>
 
-      <div className="px-5 space-y-5 max-w-md mx-auto">
+      <div className="px-5 mt-6 space-y-5 max-w-md md:max-w-4xl lg:max-w-5xl mx-auto md:grid md:grid-cols-2 md:gap-6 md:space-y-0 md:items-start">
         
         {/* Main Settings Card */}
         {(() => {

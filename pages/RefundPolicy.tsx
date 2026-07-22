@@ -15,13 +15,6 @@ const RefundPolicy: React.FC = () => {
       
       <div className="space-y-8 text-sm md:text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
         <div>
-          <button 
-            onClick={() => navigate(-1)} 
-            className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 mb-6 font-medium text-xs uppercase tracking-wider"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Go Back</span>
-          </button>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">Refund, Return & Warranty Policy</h1>
           <p>Last Updated: {new Date().toLocaleDateString()}</p>
         </div>

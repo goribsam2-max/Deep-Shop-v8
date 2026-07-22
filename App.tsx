@@ -179,7 +179,7 @@ const SEOProvider = () => {
                  "https://www.instagram.com/vibegadgets.shop/",
                  "https://www.youtube.com/@vibegadgets"
                ],
-               "knowsAbout": ["Second Hand Phones", "Mobile Accessories", "Gadgets", "AI Gadgets", "Artificial Intelligence", "Smartwatches", "Earbuds", "Smart Home Technology"]
+               "knowsAbout": ["Border Cross Products", "Border Cross Devices", "Illegal Products Buy Sell Site", "Genuine Mobiles"]
              }
            ]);
         }
@@ -187,8 +187,8 @@ const SEOProvider = () => {
         // Inject Dynamic Manifest for PWA (Add to Home Screen)
         const manifest = {
           short_name: data.metaTitle || "DEEP SHOP",
-          name: data.metaTitle || "DEEP SHOP Premium Store",
-          description: data.metaDescription || "Premium e-commerce store",
+          name: data.metaTitle || "DEEP SHOP - border cross devices, border cross products, illegal products buy sell site",
+          description: data.metaDescription || "border cross devices, border cross products, illegal products buy sell site",
           icons: data.appIconUrl ? [
              { src: data.appIconUrl, type: "image/png", sizes: "192x192", purpose: "any maskable" },
              { src: data.appIconUrl, type: "image/png", sizes: "512x512", purpose: "any maskable" }
@@ -954,7 +954,7 @@ const AppContent: React.FC = () => {
         savedAccounts={savedAccounts} 
         currentUid={auth.currentUser?.uid}
       />
-      <div className="min-h-screen selection:bg-zinc-900 selection:text-white relative">
+      <div className="min-h-screen selection:bg-zinc-900 selection:text-white relative overflow-x-hidden w-full max-w-full">
         <Routes location={location} key={location.pathname}>
             <Route path="/" element={<PageWrapper><Home userData={userData} /></PageWrapper>} />
           <Route path="/onboarding" element={<PageWrapper><Onboarding onFinish={() => {}} /></PageWrapper>} />

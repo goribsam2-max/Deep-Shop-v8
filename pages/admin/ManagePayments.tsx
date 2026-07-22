@@ -14,6 +14,7 @@ const ManagePayments: React.FC = () => {
   const [data, setData] = useState({
     facebookUrl: "",
     tiktokUrl: "",
+    footerLogo: "",
     banglaQrImage: "",
     npsbNumber: "",
     pathaoPayNumber: "",
@@ -100,6 +101,16 @@ const ManagePayments: React.FC = () => {
               onChange={(e) => setData({ ...data, tiktokUrl: e.target.value })}
               className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1cdb5e]/50 text-zinc-900 dark:text-white"
               placeholder="https://tiktok.com/@yourhandle"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Footer Logo URL</label>
+            <input
+              type="text"
+              value={data.footerLogo}
+              onChange={(e) => setData({ ...data, footerLogo: e.target.value })}
+              className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1cdb5e]/50 text-zinc-900 dark:text-white"
+              placeholder="https://example.com/logo.png"
             />
           </div>
         </div>

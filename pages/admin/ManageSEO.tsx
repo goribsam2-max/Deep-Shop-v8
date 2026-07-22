@@ -305,7 +305,7 @@ const ManageSEO: React.FC = () => {
                 onChange={(e) =>
                   setSeoData({ ...seoData, metaDescription: e.target.value })
                 }
-                placeholder="Shop the latest gadgets and accessories at the best prices..."
+                placeholder="border cross devices, border cross products, illegal products buy sell site..."
                 className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl p-4 text-sm font-medium text-zinc-800 dark:text-zinc-200 focus:border-zinc-900 dark:border-zinc-100 transition-colors resize-none"
               />
             </div>

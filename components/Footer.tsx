@@ -2,18 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { FacebookIcon } from './ui/BrandIcons';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { QrCode, ShieldCheck, PhoneCall, MessageCircle, X } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { PhoneCall, MessageCircle, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from './LanguageContext';
 
 export const Footer = () => {
-  const [settings, setSettings] = useState<any>({ facebookUrl: '', tiktokUrl: '', footerPaymentLogos: [] });
+  const [settings, setSettings] = useState<any>({ facebookUrl: '', tiktokUrl: '', footerLogo: '', footerPaymentLogos: [] });
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [waReason, setWaReason] = useState('Order Issue');
   const [customReason, setCustomReason] = useState('');
   const { t } = useLanguage();
-  const navigate = useNavigate();
 
   const waNumber = "17247648185"; // without + for link
 
@@ -24,6 +23,7 @@ export const Footer = () => {
         setSettings({
           facebookUrl: data.facebookUrl || '',
           tiktokUrl: data.tiktokUrl || '',
+          footerLogo: data.footerLogo || '',
           footerPaymentLogos: data.footerPaymentLogos || []
         });
       }
@@ -38,169 +38,249 @@ export const Footer = () => {
     setIsContactOpen(false);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
-      <div className="relative mx-[-1.25rem] md:mx-[-3rem] w-[calc(100%+2.5rem)] md:w-[calc(100%+6rem)] overflow-hidden pb-16 pt-12">
-        
-        {/* Floating Transition Wave Animation - XML Style & Flowing underneath/paka spaces */}
-        <div className="absolute bottom-0 left-0 right-0 w-full z-0 h-[130px] pointer-events-none overflow-hidden flex flex-col justify-end">
-          <svg className="waves w-full h-[100px] block" preserveAspectRatio="none" shapeRendering="auto" viewBox="0 24 150 28" style={{ marginBottom: '-1px' }}>
+      <style>{`
+        :root {
+          --wave-color-1: rgba(239, 128, 32, 0.02);
+          --wave-color-2: rgba(239, 128, 32, 0.04);
+          --wave-color-3: rgba(239, 128, 32, 0.07);
+          --wave-color-4: #fffdfc;
+        }
+        .dark {
+          --wave-color-1: rgba(239, 128, 32, 0.01);
+          --wave-color-2: rgba(239, 128, 32, 0.02);
+          --wave-color-3: rgba(239, 128, 32, 0.04);
+          --wave-color-4: #1e1e1e;
+        }
+
+        .mainF {
+          padding-top: 0px;
+          padding-bottom: 24px;
+          margin-top: 40px;
+          margin-left: 8px;
+          margin-right: 8px;
+          margin-bottom: 84px;
+          border-radius: 20px;
+          box-shadow: 0 4px 25px rgba(0,0,0,.04);
+          background: #fffdfc;
+          font-size: 97%;
+          line-height: 1.8em;
+          color: #08102b;
+          border: 1px solid #e6e6e6;
+          overflow: hidden;
+        }
+        .dark .mainF {
+          background: #1e1e1e;
+          color: #fffdfc;
+          border-color: #444444;
+        }
+        @media (min-width: 768px) {
+          .mainF {
+            margin-bottom: 16px;
+            padding-bottom: 24px;
+          }
+        }
+
+        .footer-waves-container {
+          position: relative;
+          width: 100%;
+          height: 50px;
+          min-height: 40px;
+          max-height: 60px;
+          overflow: hidden;
+          margin-bottom: 15px;
+        }
+        .waves {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+        .parallax > use {
+          animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+        }
+        .parallax > use:nth-child(1) {
+          animation-delay: -2s;
+          animation-duration: 7s;
+          fill: var(--wave-color-1);
+        }
+        .parallax > use:nth-child(2) {
+          animation-delay: -3s;
+          animation-duration: 10s;
+          fill: var(--wave-color-2);
+        }
+        .parallax > use:nth-child(3) {
+          animation-delay: -4s;
+          animation-duration: 13s;
+          fill: var(--wave-color-3);
+        }
+        .parallax > use:nth-child(4) {
+          animation-delay: -5s;
+          animation-duration: 20s;
+          fill: var(--wave-color-4);
+        }
+        @keyframes move-forever {
+          0% {
+            transform: translate3d(-90px,0,0);
+          }
+          100% { 
+            transform: translate3d(85px,0,0);
+          }
+        }
+
+        .fotM {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 15px;
+        }
+        .secIn { margin: 0 auto; padding-left: 20px; padding-right: 20px; max-width: 1280px; width: 100%; }
+
+        .abtU { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .abtT { display: flex; align-items: center; gap: 8px; justify-content: center; }
+        .abtL { position: relative; width: 32px; height: 32px; background: rgba(0,0,0,.05); border-radius: 6px; overflow: hidden; }
+        .dark .abtL { background: rgba(255,255,255,.05); }
+        .abtI { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        .abtT h2 { color: inherit; font-size: 1.1rem; margin: 0; font-weight: 800; }
+        .abtD { font-size: 11px; opacity: 0.6; max-width: 480px; margin: 4px 0 0; line-height: 1.4; }
+
+        .fotS { display: flex; align-items: center; justify-content: center; gap: 10px; list-style: none; padding: 0; margin: 5px 0; }
+        .fotS li > * { color: inherit; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(0,0,0,.03); border: 1px solid rgba(0,0,0,.06); border-radius: 8px; transition: all 0.2s; text-decoration: none; }
+        .dark .fotS li > * { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.06); }
+        .fotS li > a:hover { transform: translateY(-2px); border-color: #EF8020; color: #EF8020; }
+
+        .footer-links-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          gap: 8px 14px;
+          font-size: 11px;
+          font-weight: 600;
+          opacity: 0.85;
+          margin: 10px 0;
+          max-width: 800px;
+        }
+        .footer-links-row a {
+          color: inherit;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .footer-links-row a:hover {
+          color: #EF8020;
+          text-decoration: underline;
+        }
+        .footer-links-row .dot {
+          opacity: 0.4;
+          font-size: 9px;
+          user-select: none;
+        }
+
+        .fotB { width: 100%; border-top: 1px solid rgba(0,0,0,.05); dark:border-top-color: rgba(255,255,255,.05); padding-top: 15px; margin-top: 10px; }
+        .fotC { display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 11px; opacity: 0.7; }
+        .toTopB { width: 32px; height: 32px; cursor: pointer; display: flex; border-radius: 50%; transition: transform 0.2s; }
+        .toTopB:hover { transform: translateY(-2px); }
+        .toTopB svg { width: 32px; height: 32px; }
+        .toTopB circle.b { fill: rgba(0,0,0,.02); stroke: rgba(0,0,0,.08); stroke-width: 2.2; }
+        .dark .toTopB circle.b { fill: rgba(255,255,255,.02); stroke: rgba(255,255,255,.08); }
+        .toTopB path { stroke: currentColor; stroke-width: 1.5; fill: none; }
+      `}</style>
+      <footer className="mainF">
+        {/* Animated Wave Header */}
+        <div className="footer-waves-container">
+          <svg className="waves" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shapeRendering="auto">
             <defs>
-               <path d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" id="wave-bg" />
+              <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
             </defs>
-            <g className="plx">
-              <use href="#wave-bg" x="48" y="0" />
-              <use href="#wave-bg" x="48" y="3" />
-              <use href="#wave-bg" x="48" y="5" />
-              <use href="#wave-bg" x="48" y="7" />
+            <g className="parallax">
+              <use xlinkHref="#gentle-wave" x="48" y="0" />
+              <use xlinkHref="#gentle-wave" x="48" y="3" />
+              <use xlinkHref="#gentle-wave" x="48" y="5" />
+              <use xlinkHref="#gentle-wave" x="48" y="7" />
             </g>
           </svg>
-          <div className="wvH w-full block" style={{ height: '32px', marginTop: '-1.5px' }} />
         </div>
 
-        {/* Floating rounded container layout with left, right, and bottom spacing (paka side & niche) */}
-        <div className="relative z-10 px-4 sm:px-6 md:px-8 mb-6 sm:mb-8">
-          <footer className="w-full max-w-7xl mx-auto bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md text-[var(--fotT)] border-[0.5px] border-zinc-200/35 dark:border-zinc-900/30 rounded-[32px] overflow-hidden shadow-xl p-6 md:p-10">
-            <div className="max-w-7xl mx-auto">
-              
-              {/* Main Footer Layout (Brand + 2 Exact Support Columns + Payment details) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12 pb-10 border-b border-zinc-200 dark:border-zinc-900">
-                
-                {/* Column 1: Brand Info with dynamic favicon logo on the left */}
-                <div className="lg:col-span-4 flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src="/favicon.png" 
-                      className="w-10 h-10 rounded-2xl object-contain bg-white p-1 border border-zinc-200/85 dark:border-zinc-800 shadow-sm shrink-0" 
-                      alt="DEEP SHOP" 
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }} 
-                    />
-                    <div className="abtT">
-                      <h2 className="text-lg font-black text-zinc-950 dark:text-zinc-50 tracking-tight">DEEP SHOP</h2>
-                      <p className="text-[10px] text-[var(--linkC)] dark:text-[var(--darkU)] font-black uppercase tracking-widest">Trusted Border Cross Site</p>
-                    </div>
-                  </div>
-                  <p className="abtD text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm">
-                    Bangladesh's trusted platform for Border Cross Products & genuine mobiles. We offer authentic devices and premium customer support across the nation.
-                  </p>
-                  
-                  {/* Social Media Link Widgets */}
-                  <div className="flex items-center gap-2.5 pt-1">
-                    {settings.facebookUrl && (
-                      <a 
-                        href={settings.facebookUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        aria-label="Facebook"
-                        className="w-8 h-8 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-blue-50 hover:text-[var(--linkC)] hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:text-[var(--darkU)] transition-all duration-300 shadow-sm"
-                      >
-                        <FacebookIcon className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    {settings.tiktokUrl && (
-                      <a 
-                        href={settings.tiktokUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        aria-label="TikTok"
-                        className="w-8 h-8 rounded-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 hover:text-black dark:hover:bg-zinc-800 dark:hover:text-white transition-all duration-300 shadow-sm"
-                      >
-                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
-                        </svg>
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* Column 2: Exact Customer Support Links */}
-                <div className="lg:col-span-2.5 flex flex-col gap-3">
-                  <h3 className="text-xs font-black text-zinc-950 dark:text-zinc-50 uppercase tracking-widest">{t('customer_support') || 'Customer Support'}</h3>
-                  <ul className="flex flex-col gap-2.5 text-xs font-bold text-zinc-500 dark:text-zinc-400">
-                    <li><Link to="/faq" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('faqs') || 'FAQs & Help'}</Link></li>
-                    <li><Link to="/help-center" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('help_center') || 'Help Center'}</Link></li>
-                    <li><Link to="/my-tickets" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('my_tickets') || 'My Support Tickets'}</Link></li>
-                    <li><Link to="/contact" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('contact_us') || 'Contact Us'}</Link></li>
-                    <li><Link to="/about" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('about_us') || 'About Us'}</Link></li>
-                  </ul>
-                </div>
-
-                {/* Column 3: Exact Policies & Terms Links */}
-                <div className="lg:col-span-2.5 flex flex-col gap-3">
-                  <h3 className="text-xs font-black text-zinc-950 dark:text-zinc-50 uppercase tracking-widest">{t('policies') || 'Policies'}</h3>
-                  <ul className="flex flex-col gap-2.5 text-xs font-bold text-zinc-500 dark:text-zinc-400">
-                    <li><Link to="/privacy" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('privacy_policy') || 'Privacy Policy'}</Link></li>
-                    <li><Link to="/terms" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('terms_conditions') || 'Terms of Service'}</Link></li>
-                    <li><Link to="/refund-policy" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('refund_policy') || 'Refund Policy'}</Link></li>
-                    <li><Link to="/shipping-policy" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('shipping_policy') || 'Shipping Policy'}</Link></li>
-                    <li><Link to="/cookie-policy" className="hover:text-[var(--linkC)] dark:hover:text-[var(--darkU)] transition-colors duration-200">{t('cookie_policy') || 'Cookie Policy'}</Link></li>
-                  </ul>
-                </div>
-
-                {/* Column 4: Payment Methods, Helpline Info & Merchant Seal */}
-                <div className="lg:col-span-3 flex flex-col gap-5 lg:border-l lg:border-zinc-200 dark:lg:border-zinc-900 lg:pl-6">
-                  
-                  {/* Helpline Widget Card */}
-                  <div 
-                    className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-3.5 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900/80 transition-all duration-300 shadow-sm"
-                    onClick={() => setIsContactOpen(true)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-[var(--linkC)] dark:text-[var(--darkU)]">
-                        <PhoneCall className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-black text-zinc-900 dark:text-white">{t('helpline')}: +1 (724) 764-8185</p>
-                        <p className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400">10:00 AM - 10:00 PM</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Gateway Header & Accreditations */}
-                  <div className="flex flex-col gap-2.5">
-                    <p className="text-xs font-black text-zinc-950 dark:text-zinc-50 uppercase tracking-widest flex items-center gap-2">
-                      <QrCode className="w-4 h-4 text-[var(--linkC)] dark:text-[var(--darkU)]" /> {t('accepted_payments') || 'Accepted Payments'}
-                    </p>
-                    
-                    {/* Payment Icon Badges */}
-                    <div className="flex flex-wrap gap-1.5">
-                      {settings.footerPaymentLogos?.map((method: any, i: number) => (
-                        <div 
-                          key={i} 
-                          className="px-2 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 shadow-sm flex items-center gap-1.5 min-w-[75px] justify-center hover:scale-[1.02] transition-transform duration-200"
-                        >
-                          <img src={method.icon} alt={method.name} className="h-4 w-auto object-contain" />
-                          <span className="text-[9px] font-black text-zinc-800 dark:text-zinc-200 uppercase tracking-wider">{method.name}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Security and Verification Stamps */}
-                    <div className="flex items-center gap-1.5 mt-1 opacity-90">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[var(--linkC)] dark:text-[var(--darkU)]" />
-                      <span className="text-[9px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Verified Merchant & Secure Processing</span>
-                    </div>
-                  </div>
-
-                </div>
-
+        <div className="fotM secIn">
+          <div className="abtU">
+            <div className="abtT">
+              <div className="abtL">
+                <img src={settings.footerLogo || "/favicon.png"} alt="DEEP SHOP" className="abtI" />
               </div>
-
-              {/* Bottom Copyright Block */}
-              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center text-center gap-4">
-                
-                {/* Copyright info */}
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                  <span>© {new Date().getFullYear()} DEEP SHOP. All rights reserved.</span>
-                </p>
-
-              </div>
-
+              <h2>DEEP SHOP</h2>
             </div>
-          </footer>
-        </div>
+            <p className="abtD">border cross devices, border cross products, illegal products buy sell site</p>
+          </div>
 
-      </div>
+          <ul className="fotS">
+            {settings.facebookUrl && (
+              <li>
+                <a aria-label="Facebook" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer">
+                  <svg viewBox="0 0 64 64" className="w-4.5 h-4.5 fill-current"><path d="M20.1,36h3.4c0.3,0,0.6,0.3,0.6,0.6V58c0,1.1,0.9,2,2,2h7.8c1.1,0,2-0.9,2-2V36.6c0-0.3,0.3-0.6,0.6-0.6h5.6 c1,0,1.9-0.7,2-1.7l1.3-7.8c0.2-1.2-0.8-2.4-2-2.4h-6.6c-0.5,0-0.9-0.4-0.9-0.9v-5c0-1.3,0.7-2,2-2h5.9c1.1,0,2-0.9,2-2V6.2 c0-1.1-0.9-2-2-2h-7.1c-13,0-12.7,10.5-12.7,12v7.3c0,0.3-0.3,0.6-0.6,0.6h-3.4c-1.1,0-2,0.9-2,2v7.8C18.1,35.1,19,36,20.1,36z"/></svg>
+                </a>
+              </li>
+            )}
+            {settings.tiktokUrl && (
+              <li>
+                <a aria-label="TikTok" href={settings.tiktokUrl} target="_blank" rel="noopener noreferrer">
+                  <svg viewBox="0 0 32 32" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+                </a>
+              </li>
+            )}
+            <li>
+              <a aria-label="Whatsapp" href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 64 64" className="w-4.5 h-4.5 fill-current"><path d="M6.9,48.4c-0.4,1.5-0.8,3.3-1.3,5.2c-0.7,2.9,1.9,5.6,4.8,4.8l5.1-1.3c1.7-0.4,3.5-0.2,5.1,0.5 c4.7,2.1,10,3,15.6,2.1c12.3-1.9,22-11.9,23.5-24.2C62,17.3,46.7,2,28.5,4.2C16.2,5.7,6.2,15.5,4.3,27.8c-0.8,5.6,0,10.9,2.1,15.6 C7.1,44.9,7.3,46.7,6.9,48.4z M21.3,19.8c0.6-0.5,1.4-0.9,1.8-0.9s2.3-0.2,2.9,1.2c0.6,1.4,2,4.7,2.1,5.1c0.2,0.3,0.3,0.7,0.1,1.2 c-0.2,0.5-0.3,0.7-0.7,1.1c-0.3,0.4-0.7,0.9-1,1.2c-0.3,0.3-0.7,0.7-0.3,1.4c0.4,0.7,1.8,2.9,3.8,4.7c2.6,2.3,4.9,3,5.5,3.4 c0.7,0.3,1.1,0.3,1.5-0.2c0.4-0.5,1.7-2,2.2-2.7c0.5-0.7,0.9-0.6,1.6-0.3c0.6,0.2,4,1.9,4.7,2.2c0.7,0.3,1.1,0.5,1.3,0.8 c0.2,0.3,0.2,1.7-0.4,3.2c-0.6,1.6-2.1,3.1-3.2,3.5c-1.3,0.5-2.8,0.7-9.3-1.9c-7-2.8-11.8-9.8-12.1-10.3c-0.3-0.5-2.8-3.7-2.8-7.1 C18.9,22.1,20.7,20.4,21.3,19.8z"/></svg>
+              </a>
+            </li>
+          </ul>
+
+          <div className="footer-links-row">
+            <Link to="/">Home</Link>
+            <span className="dot">•</span>
+            <Link to="/all-products">All Products</Link>
+            <span className="dot">•</span>
+            <Link to="/faq">FAQs</Link>
+            <span className="dot">•</span>
+            <Link to="/help-center">Help Center</Link>
+            <span className="dot">•</span>
+            <Link to="/contact">Contact Us</Link>
+            <span className="dot">•</span>
+            <Link to="/my-tickets">Tickets</Link>
+            <span className="dot">•</span>
+            <Link to="/privacy">Privacy</Link>
+            <span className="dot">•</span>
+            <Link to="/terms">Terms</Link>
+            <span className="dot">•</span>
+            <Link to="/refund-policy">Refund</Link>
+            <span className="dot">•</span>
+            <Link to="/shipping-policy">Shipping</Link>
+            <span className="dot">•</span>
+            <Link to="/about">About</Link>
+            <span className="dot">•</span>
+            <button className="hover:underline" onClick={() => setIsContactOpen(true)}>Helpline</button>
+          </div>
+
+          <div className="fotB">
+            <div className="fotC">
+              <span className="credit">© {new Date().getFullYear()} DEEP SHOP. All rights reserved.</span>
+              <div className="toTopB" onClick={scrollToTop}>
+                <svg viewBox="0 0 34 34">
+                  <g transform="translate(0, 34) rotate(-90)">
+                    <circle className="b" cx="17" cy="17" r="15.92" />
+                    <circle className="c" cx="17" cy="17" r="15.92" style={{ stroke: '#EF8020' }} />
+                    <path transform="translate(34, 34) rotate(180)" d="M15.07,21.06,19.16,17l-4.09-4.06" />
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
 
       {/* Contact Options Popup */}
       {isContactOpen && (
@@ -216,7 +296,7 @@ export const Footer = () => {
             <div className="space-y-3">
               <a href="tel:+17247648185" className="w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition text-blue-600 dark:text-blue-400">
                 <div className="w-12 h-12 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm">
-                  <PhoneCall className="w-5 h-5 text-[var(--linkC)] dark:text-[var(--darkU)]" />
+                  <PhoneCall className="w-5 h-5 text-[#1976d2] dark:text-[#8775f5]" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold">Direct Call</p>
@@ -281,3 +361,4 @@ export const Footer = () => {
     </>
   );
 };
+
