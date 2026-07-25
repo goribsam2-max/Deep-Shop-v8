@@ -8,15 +8,19 @@ export const HeaderNotification: React.FC = () => {
   const [notifConfig, setNotifConfig] = useState<{
     enabled: boolean;
     text: string;
+    linkEnabled: boolean;
     textLinkText?: string;
     textLinkUrl?: string;
+    btnEnabled: boolean;
     buttonText?: string;
     buttonUrl?: string;
   }>({
     enabled: true,
     text: "Welcome to Lantro UI!",
+    linkEnabled: true,
     textLinkText: "Test link",
     textLinkUrl: "#",
+    btnEnabled: true,
     buttonText: "Buy now!",
     buttonUrl: ""
   });
@@ -30,8 +34,10 @@ export const HeaderNotification: React.FC = () => {
         setNotifConfig({
           enabled: data.notificationBannerEnabled ?? true,
           text: data.notificationBannerText ?? "Welcome to Lantro UI!",
+          linkEnabled: data.notificationBannerLinkEnabled ?? true,
           textLinkText: data.notificationBannerLinkText ?? "Test link",
           textLinkUrl: data.notificationBannerLinkUrl ?? "#",
+          btnEnabled: data.notificationBannerBtnEnabled ?? true,
           buttonText: data.notificationBannerBtnText ?? "Buy now!",
           buttonUrl: data.notificationBannerBtnUrl ?? ""
         });
@@ -54,7 +60,7 @@ export const HeaderNotification: React.FC = () => {
           <div className="ntfA">
             <span className="whitespace-nowrap inline-flex items-center gap-1 shrink-0">
               {notifConfig.text}
-              {notifConfig.textLinkText && (
+              {notifConfig.linkEnabled && notifConfig.textLinkText && (
                 <a
                   className="ntf-inline-link whitespace-nowrap"
                   href={notifConfig.textLinkUrl || "#"}
@@ -65,7 +71,7 @@ export const HeaderNotification: React.FC = () => {
                 </a>
               )}
             </span>
-            {notifConfig.buttonText && (
+            {notifConfig.btnEnabled && notifConfig.buttonText && (
               <a
                 className="ntf-btn whitespace-nowrap shrink-0"
                 href={notifConfig.buttonUrl || "#"}

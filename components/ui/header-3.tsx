@@ -490,16 +490,15 @@ export function Header() {
         className="bg-white dark:bg-zinc-900 border-l md:border-l-0 md:border-r border-zinc-200 dark:border-zinc-800"
       >
         {/* Top scrollable links and categories */}
-        <div className="flex-1 overflow-y-auto no-scrollbar w-full">
-          <div className="flex w-full flex-col gap-y-2 pb-4">
-            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-4 mt-4 mb-2 block">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar w-full">
+          <div className="flex w-full flex-col gap-y-1.5 pb-4 px-2">
+            <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 px-2 mt-4 mb-2 block">
               {isAdmin ? "Admin Pages" : "Explore Pages"}
             </span>
             {linksToShow.map((link) => (
               <ListItem
                 key={link.title}
                 {...link}
-                className="mx-2"
                 onClick={() => {
                   triggerHaptic();
                   setOpen(false);
@@ -654,24 +653,24 @@ function ListItem({
       onClick={onClick}
       className={({ isActive }) =>
         cn(
-          "w-full flex items-center flex-row gap-x-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 rounded-xl p-2 transition-colors",
-          isActive && "bg-zinc-100 dark:bg-zinc-800",
+          "w-full flex items-center flex-row gap-x-3 hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 rounded-xl px-2.5 py-1.5 transition-colors overflow-hidden max-w-full box-border",
+          isActive && "bg-zinc-100 dark:bg-zinc-800 font-medium",
           className,
         )
       }
     >
-      <div className="bg-zinc-100 dark:bg-zinc-800 flex aspect-square size-12 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm shrink-0">
+      <div className="bg-zinc-100 dark:bg-zinc-800 flex aspect-square size-10 items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm shrink-0">
         {typeof IconComp === "string" ? (
-          <Icon name={IconComp} className="text-zinc-700 dark:text-zinc-300 size-5" />
+          <Icon name={IconComp} className="text-zinc-700 dark:text-zinc-300 size-4.5" />
         ) : (
-          <IconComp className="text-zinc-700 dark:text-zinc-300 size-5" />
+          <IconComp className="text-zinc-700 dark:text-zinc-300 size-4.5" />
         )}
       </div>
-      <div className="flex flex-col items-start justify-center">
-        <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+      <div className="flex flex-col items-start justify-center min-w-0 flex-1 truncate">
+        <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs sm:text-sm truncate w-full text-left">
           {title}
         </span>
-        <span className="text-zinc-500 dark:text-zinc-400 text-xs mt-0.5">
+        <span className="text-zinc-500 dark:text-zinc-400 text-[11px] leading-tight truncate w-full text-left">
           {description}
         </span>
       </div>

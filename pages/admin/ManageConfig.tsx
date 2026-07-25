@@ -59,8 +59,10 @@ const ManageConfig: React.FC = () => {
     facebookPageName: "DEEP SHOP Facebook Page",
     notificationBannerEnabled: true,
     notificationBannerText: "Welcome to Lantro UI!",
+    notificationBannerLinkEnabled: true,
     notificationBannerLinkText: "Test link",
     notificationBannerLinkUrl: "#",
+    notificationBannerBtnEnabled: true,
     notificationBannerBtnText: "Buy now!",
     notificationBannerBtnUrl: "",
   });
@@ -217,38 +219,76 @@ const ManageConfig: React.FC = () => {
               }
               placeholder="e.g., Welcome to Lantro UI!"
             />
-            <Field
-              label="Inline Text Link Label"
-              value={configs.notificationBannerLinkText}
-              onChange={(v: string) =>
-                setConfigs({ ...configs, notificationBannerLinkText: v })
-              }
-              placeholder="e.g., Test link"
-            />
-            <Field
-              label="Inline Text Link URL"
-              value={configs.notificationBannerLinkUrl}
-              onChange={(v: string) =>
-                setConfigs({ ...configs, notificationBannerLinkUrl: v })
-              }
-              placeholder="e.g., https://example.com"
-            />
-            <Field
-              label="Action Button Text"
-              value={configs.notificationBannerBtnText}
-              onChange={(v: string) =>
-                setConfigs({ ...configs, notificationBannerBtnText: v })
-              }
-              placeholder="e.g., Buy now!"
-            />
-            <Field
-              label="Action Button URL"
-              value={configs.notificationBannerBtnUrl}
-              onChange={(v: string) =>
-                setConfigs({ ...configs, notificationBannerBtnUrl: v })
-              }
-              placeholder="e.g., /cart"
-            />
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-4">
+              <Toggle
+                label="Enable Text Link in Notification"
+                active={configs.notificationBannerLinkEnabled ?? true}
+                onToggle={() =>
+                  setConfigs({
+                    ...configs,
+                    notificationBannerLinkEnabled: !(
+                      configs.notificationBannerLinkEnabled ?? true
+                    ),
+                  })
+                }
+              />
+              {(configs.notificationBannerLinkEnabled ?? true) && (
+                <div className="space-y-4 pt-2">
+                  <Field
+                    label="Inline Text Link Label"
+                    value={configs.notificationBannerLinkText}
+                    onChange={(v: string) =>
+                      setConfigs({ ...configs, notificationBannerLinkText: v })
+                    }
+                    placeholder="e.g., Test link"
+                  />
+                  <Field
+                    label="Inline Text Link URL"
+                    value={configs.notificationBannerLinkUrl}
+                    onChange={(v: string) =>
+                      setConfigs({ ...configs, notificationBannerLinkUrl: v })
+                    }
+                    placeholder="e.g., https://example.com"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-4">
+              <Toggle
+                label="Enable Action Button"
+                active={configs.notificationBannerBtnEnabled ?? true}
+                onToggle={() =>
+                  setConfigs({
+                    ...configs,
+                    notificationBannerBtnEnabled: !(
+                      configs.notificationBannerBtnEnabled ?? true
+                    ),
+                  })
+                }
+              />
+              {(configs.notificationBannerBtnEnabled ?? true) && (
+                <div className="space-y-4 pt-2">
+                  <Field
+                    label="Action Button Text"
+                    value={configs.notificationBannerBtnText}
+                    onChange={(v: string) =>
+                      setConfigs({ ...configs, notificationBannerBtnText: v })
+                    }
+                    placeholder="e.g., Buy now!"
+                  />
+                  <Field
+                    label="Action Button URL"
+                    value={configs.notificationBannerBtnUrl}
+                    onChange={(v: string) =>
+                      setConfigs({ ...configs, notificationBannerBtnUrl: v })
+                    }
+                    placeholder="e.g., /cart"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </AccordionSection>
 
