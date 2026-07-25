@@ -320,8 +320,8 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
   );
 
   return (
-    <div className="relative pt-4 px-5 md:px-12 bg-white dark:bg-[#121212] w-full min-h-screen font-sans pb-0">
-      <div className="max-w-[1440px] mx-auto">
+    <div className="relative pt-4 bg-white dark:bg-[#121212] w-full min-h-screen font-sans pb-0">
+      <div className="max-w-[1440px] mx-auto px-5 md:px-12">
       <SEO
         title="DEEP SHOP | Border Cross Products & Genuine Mobiles Bangladesh"
         description="DEEP SHOP is Bangladesh's trusted platform for Border Cross Products & genuine mobiles. Find 100% authentic and trusted global tech products."

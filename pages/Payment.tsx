@@ -102,15 +102,56 @@ const Payment: React.FC = () => {
         await updateDoc(doc(db, "orders", orderId as string), {
           accountNameSender: senderNumber.trim(),
           transactionId: trxId.trim(),
-          status: "processing"
+          status: "pending"
         });
+
+        // Notify seller and admin now that advance payment details are provided
+        try {
+          const uniqueSellerIds = Array.from(new Set(order.items?.map((i: any) => i.sellerId).filter(Boolean)));
+          uniqueSellerIds.forEach((sellerId) => {
+            fetch("/api/send-push-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: sellerId,
+                title: "New Customer Order! 🛍️",
+                body: `You received a new order from ${order.customerName || 'Customer'} for ৳${order.total}.`,
+                link: "/seller/dashboard"
+              })
+            }).catch(err => console.error("Seller push notification failed:", err));
+
+            addDoc(collection(db, "notifications"), {
+              userId: sellerId,
+              title: "New Order Received! 🛍️",
+              message: `New order #${orderId?.slice(0, 8)} received from ${order.customerName || 'Customer'}.`,
+              createdAt: Date.now(),
+              isRead: false,
+              type: "order",
+              link: `/seller/dashboard`
+            }).catch(console.error);
+          });
+
+          // Notify admins
+          fetch("/api/send-push-admin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: "New Customer Order! 🛍️",
+              body: `A new order was placed by ${order.customerName || 'Customer'} for ৳${order.total}.`,
+              link: "/admin/orders"
+            })
+          }).catch(err => console.error("Admin order push failed:", err));
+        } catch (e) {
+          console.error("Failed to send order notifications:", e);
+        }
+
         // Re-fetch or merge to send to telegram
         await sendOrderToTelegram({
           ...order,
           id: orderId,
           accountNameSender: senderNumber.trim(),
           transactionId: trxId.trim(),
-          status: "processing"
+          status: "pending"
         });
         notify("Payment submitted successfully", "success");
         navigate(`/success?orderId=${orderId}`);

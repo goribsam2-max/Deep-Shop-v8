@@ -46,60 +46,83 @@ export const Footer = () => {
     <>
       <style>{`
         :root {
-          --wave-color-1: rgba(239, 128, 32, 0.02);
-          --wave-color-2: rgba(239, 128, 32, 0.04);
-          --wave-color-3: rgba(239, 128, 32, 0.07);
-          --wave-color-4: #fffdfc;
+          --wave-color-1: rgba(28, 219, 94, 0.2);
+          --wave-color-2: rgba(28, 219, 94, 0.4);
+          --wave-color-3: rgba(28, 219, 94, 0.6);
+          --wave-color-4: #1cdb5e;
         }
         .dark {
-          --wave-color-1: rgba(239, 128, 32, 0.01);
-          --wave-color-2: rgba(239, 128, 32, 0.02);
-          --wave-color-3: rgba(239, 128, 32, 0.04);
-          --wave-color-4: #1e1e1e;
+          --wave-color-1: rgba(14, 107, 46, 0.2);
+          --wave-color-2: rgba(14, 107, 46, 0.4);
+          --wave-color-3: rgba(14, 107, 46, 0.6);
+          --wave-color-4: #0e6b2e;
         }
 
         .mainF {
-          padding-top: 0px;
+          padding-top: 32px;
           padding-bottom: 24px;
           margin-top: 40px;
-          margin-left: 8px;
-          margin-right: 8px;
+          margin-left: 12px;
+          margin-right: 12px;
           margin-bottom: 84px;
           border-radius: 20px;
-          box-shadow: 0 4px 25px rgba(0,0,0,.04);
+          box-shadow: 0 8px 30px rgba(0,0,0,.08);
           background: #fffdfc;
           font-size: 97%;
           line-height: 1.8em;
           color: #08102b;
           border: 1px solid #e6e6e6;
           overflow: hidden;
+          position: relative;
+          z-index: 10;
         }
         .dark .mainF {
           background: #1e1e1e;
           color: #fffdfc;
-          border-color: #444444;
+          border-color: #27272a;
+          box-shadow: 0 8px 30px rgba(0,0,0,.3);
         }
         @media (min-width: 768px) {
           .mainF {
-            margin-bottom: 16px;
-            padding-bottom: 24px;
+            margin-left: 24px;
+            margin-right: 24px;
+            margin-bottom: 24px;
           }
         }
 
-        .footer-waves-container {
+        .wvC {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .wvS {
           position: relative;
           width: 100%;
-          height: 50px;
-          min-height: 40px;
-          max-height: 60px;
-          overflow: hidden;
-          margin-bottom: 15px;
+          height: 180px;
+        }
+        @media (min-width: 768px) {
+          .wvS { height: 250px; }
         }
         .waves {
-          position: relative;
+          position: absolute;
+          bottom: 0;
+          left: 0;
           width: 100%;
           height: 100%;
         }
+        .wvH {
+          position: relative;
+          height: 20px;
+          background: var(--wave-color-4);
+        }
+        @media (min-width: 768px) {
+          .wvH { height: 40px; }
+        }
+        
         .parallax > use {
           animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
         }
@@ -182,30 +205,28 @@ export const Footer = () => {
         }
 
         .fotB { width: 100%; border-top: 1px solid rgba(0,0,0,.05); dark:border-top-color: rgba(255,255,255,.05); padding-top: 15px; margin-top: 10px; }
-        .fotC { display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 11px; opacity: 0.7; }
-        .toTopB { width: 32px; height: 32px; cursor: pointer; display: flex; border-radius: 50%; transition: transform 0.2s; }
-        .toTopB:hover { transform: translateY(-2px); }
-        .toTopB svg { width: 32px; height: 32px; }
-        .toTopB circle.b { fill: rgba(0,0,0,.02); stroke: rgba(0,0,0,.08); stroke-width: 2.2; }
-        .dark .toTopB circle.b { fill: rgba(255,255,255,.02); stroke: rgba(255,255,255,.08); }
-        .toTopB path { stroke: currentColor; stroke-width: 1.5; fill: none; }
+        .fotC { display: flex; justify-content: center; align-items: center; width: 100%; font-size: 11px; opacity: 0.7; }
       `}</style>
-      <footer className="mainF">
-        {/* Animated Wave Header */}
-        <div className="footer-waves-container">
-          <svg className="waves" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shapeRendering="auto">
-            <defs>
-              <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-            </defs>
-            <g className="parallax">
-              <use xlinkHref="#gentle-wave" x="48" y="0" />
-              <use xlinkHref="#gentle-wave" x="48" y="3" />
-              <use xlinkHref="#gentle-wave" x="48" y="5" />
-              <use xlinkHref="#gentle-wave" x="48" y="7" />
-            </g>
-          </svg>
+      <div className="relative w-full overflow-hidden">
+        {/* Animated Wave Background at the very bottom of the screen */}
+        <div className="wvC">
+          <div className="wvS">
+            <svg className="waves" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shapeRendering="auto">
+              <defs>
+                <path id="gentle-wave-bottom" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+              </defs>
+              <g className="parallax">
+                <use xlinkHref="#gentle-wave-bottom" x="48" y="0" />
+                <use xlinkHref="#gentle-wave-bottom" x="48" y="3" />
+                <use xlinkHref="#gentle-wave-bottom" x="48" y="5" />
+                <use xlinkHref="#gentle-wave-bottom" x="48" y="7" />
+              </g>
+            </svg>
+          </div>
+          <div className="wvH"></div>
         </div>
 
+      <footer className="mainF">
         <div className="fotM secIn">
           <div className="abtU">
             <div className="abtT">
@@ -221,20 +242,20 @@ export const Footer = () => {
             {settings.facebookUrl && (
               <li>
                 <a aria-label="Facebook" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer">
-                  <svg viewBox="0 0 64 64" className="w-4.5 h-4.5 fill-current"><path d="M20.1,36h3.4c0.3,0,0.6,0.3,0.6,0.6V58c0,1.1,0.9,2,2,2h7.8c1.1,0,2-0.9,2-2V36.6c0-0.3,0.3-0.6,0.6-0.6h5.6 c1,0,1.9-0.7,2-1.7l1.3-7.8c0.2-1.2-0.8-2.4-2-2.4h-6.6c-0.5,0-0.9-0.4-0.9-0.9v-5c0-1.3,0.7-2,2-2h5.9c1.1,0,2-0.9,2-2V6.2 c0-1.1-0.9-2-2-2h-7.1c-13,0-12.7,10.5-12.7,12v7.3c0,0.3-0.3,0.6-0.6,0.6h-3.4c-1.1,0-2,0.9-2,2v7.8C18.1,35.1,19,36,20.1,36z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 256 256"><path fill="#1877F2" d="M256 128C256 57.308 198.692 0 128 0C57.308 0 0 57.307 0 128c0 63.888 46.808 116.843 108 126.445V165H75.5v-37H108V99.8c0-32.08 19.11-49.8 48.347-49.8C170.352 50 185 52.5 185 52.5V84h-16.14C152.958 84 148 93.867 148 103.99V128h35.5l-5.675 37H148v89.445c61.192-9.602 108-62.556 108-126.445"/><path fill="#FFF" d="m177.825 165l5.675-37H148v-24.01C148 93.866 152.959 84 168.86 84H185V52.5S170.352 50 156.347 50C127.11 50 108 67.72 108 99.8V128H75.5v37H108v89.445A128.959 128.959 0 0 0 128 256a128.9 128.9 0 0 0 20-1.555V165h29.825"/></svg>
                 </a>
               </li>
             )}
             {settings.tiktokUrl && (
               <li>
                 <a aria-label="TikTok" href={settings.tiktokUrl} target="_blank" rel="noopener noreferrer">
-                  <svg viewBox="0 0 32 32" className="w-4.5 h-4.5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2m5.939 7.713v.646a.37.37 0 0 1-.38.37a5.364 5.364 0 0 1-2.903-1.108v4.728a3.938 3.938 0 0 1-1.18 2.81a4.011 4.011 0 0 1-2.87 1.17a4.103 4.103 0 0 1-2.862-1.17a3.98 3.98 0 0 1-1.026-3.805c.159-.642.48-1.232.933-1.713a3.58 3.58 0 0 1 2.79-1.313h.82v1.703a.348.348 0 0 1-.39.348a1.918 1.918 0 0 0-1.23 3.631c.27.155.572.246.882.267c.24.01.48-.02.708-.092a1.928 1.928 0 0 0 1.313-1.816V5.754a.359.359 0 0 1 .359-.36h1.415a.359.359 0 0 1 .359.34a3.303 3.303 0 0 0 1.282 2.245a3.25 3.25 0 0 0 1.641.636a.37.37 0 0 1 .338.35z"/></svg>
                 </a>
               </li>
             )}
             <li>
               <a aria-label="Whatsapp" href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 64 64" className="w-4.5 h-4.5 fill-current"><path d="M6.9,48.4c-0.4,1.5-0.8,3.3-1.3,5.2c-0.7,2.9,1.9,5.6,4.8,4.8l5.1-1.3c1.7-0.4,3.5-0.2,5.1,0.5 c4.7,2.1,10,3,15.6,2.1c12.3-1.9,22-11.9,23.5-24.2C62,17.3,46.7,2,28.5,4.2C16.2,5.7,6.2,15.5,4.3,27.8c-0.8,5.6,0,10.9,2.1,15.6 C7.1,44.9,7.3,46.7,6.9,48.4z M21.3,19.8c0.6-0.5,1.4-0.9,1.8-0.9s2.3-0.2,2.9,1.2c0.6,1.4,2,4.7,2.1,5.1c0.2,0.3,0.3,0.7,0.1,1.2 c-0.2,0.5-0.3,0.7-0.7,1.1c-0.3,0.4-0.7,0.9-1,1.2c-0.3,0.3-0.7,0.7-0.3,1.4c0.4,0.7,1.8,2.9,3.8,4.7c2.6,2.3,4.9,3,5.5,3.4 c0.7,0.3,1.1,0.3,1.5-0.2c0.4-0.5,1.7-2,2.2-2.7c0.5-0.7,0.9-0.6,1.6-0.3c0.6,0.2,4,1.9,4.7,2.2c0.7,0.3,1.1,0.5,1.3,0.8 c0.2,0.3,0.2,1.7-0.4,3.2c-0.6,1.6-2.1,3.1-3.2,3.5c-1.3,0.5-2.8,0.7-9.3-1.9c-7-2.8-11.8-9.8-12.1-10.3c-0.3-0.5-2.8-3.7-2.8-7.1 C18.9,22.1,20.7,20.4,21.3,19.8z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 256 258"><defs><linearGradient id="logosWhatsappIcon0" x1="50%" x2="50%" y1="100%" y2="0%"><stop offset="0%" stopColor="#1FAF38"/><stop offset="100%" stopColor="#60D669"/></linearGradient><linearGradient id="logosWhatsappIcon1" x1="50%" x2="50%" y1="100%" y2="0%"><stop offset="0%" stopColor="#F9F9F9"/><stop offset="100%" stopColor="#FFF"/></linearGradient></defs><path fill="url(#logosWhatsappIcon0)" d="M5.463 127.456c-.006 21.677 5.658 42.843 16.428 61.499L4.433 252.697l65.232-17.104a122.994 122.994 0 0 0 58.8 14.97h.054c67.815 0 123.018-55.183 123.047-123.01c.013-32.867-12.775-63.773-36.009-87.025c-23.23-23.25-54.125-36.061-87.043-36.076c-67.823 0-123.022 55.18-123.05 123.004"/><path fill="url(#logosWhatsappIcon1)" d="M1.07 127.416c-.007 22.457 5.86 44.38 17.014 63.704L0 257.147l67.571-17.717c18.618 10.151 39.58 15.503 60.91 15.511h.055c70.248 0 127.434-57.168 127.464-127.423c.012-34.048-13.236-66.065-37.3-90.15C194.633 13.286 162.633.014 128.536 0C58.276 0 1.099 57.16 1.071 127.416Zm40.24 60.376l-2.523-4.005c-10.606-16.864-16.204-36.352-16.196-56.363C22.614 69.029 70.138 21.52 128.576 21.52c28.3.012 54.896 11.044 74.9 31.06c20.003 20.018 31.01 46.628 31.003 74.93c-.026 58.395-47.551 105.91-105.943 105.91h-.042c-19.013-.01-37.66-5.116-53.922-14.765l-3.87-2.295l-40.098 10.513l10.706-39.082Z"/><path fill="#FFFFFF" d="M96.678 74.148c-2.386-5.303-4.897-5.41-7.166-5.503c-1.858-.08-3.982-.074-6.104-.074c-2.124 0-5.575.799-8.492 3.984c-2.92 3.188-11.148 10.892-11.148 26.561c0 15.67 11.413 30.813 13.004 32.94c1.593 2.123 22.033 35.307 54.405 48.073c26.904 10.609 32.379 8.499 38.218 7.967c5.84-.53 18.844-7.702 21.497-15.139c2.655-7.436 2.655-13.81 1.859-15.142c-.796-1.327-2.92-2.124-6.105-3.716c-3.186-1.593-18.844-9.298-21.763-10.361c-2.92-1.062-5.043-1.592-7.167 1.597c-2.124 3.184-8.223 10.356-10.082 12.48c-1.857 2.129-3.716 2.394-6.9.801c-3.187-1.598-13.444-4.957-25.613-15.806c-9.468-8.442-15.86-18.867-17.718-22.056c-1.858-3.184-.199-4.91 1.398-6.497c1.431-1.427 3.186-3.719 4.78-5.578c1.588-1.86 2.118-3.187 3.18-5.311c1.063-2.126.531-3.986-.264-5.579c-.798-1.593-6.987-17.343-9.819-23.64"/></svg>
               </a>
             </li>
           </ul>
@@ -268,19 +289,11 @@ export const Footer = () => {
           <div className="fotB">
             <div className="fotC">
               <span className="credit">© {new Date().getFullYear()} DEEP SHOP. All rights reserved.</span>
-              <div className="toTopB" onClick={scrollToTop}>
-                <svg viewBox="0 0 34 34">
-                  <g transform="translate(0, 34) rotate(-90)">
-                    <circle className="b" cx="17" cy="17" r="15.92" />
-                    <circle className="c" cx="17" cy="17" r="15.92" style={{ stroke: '#EF8020' }} />
-                    <path transform="translate(34, 34) rotate(180)" d="M15.07,21.06,19.16,17l-4.09-4.06" />
-                  </g>
-                </svg>
-              </div>
             </div>
           </div>
         </div>
       </footer>
+      </div>
 
       {/* Contact Options Popup */}
       {isContactOpen && (

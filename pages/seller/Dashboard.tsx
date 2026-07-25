@@ -298,7 +298,8 @@ const SellerDashboard: React.FC = () => {
       const orderSnap = await getDocs(collection(db, "orders"));
       const allOrders = orderSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       const sellerOrders = allOrders.filter((ord: any) =>
-        ord.items?.some((item: any) => prodList.some((p: any) => p.id === item.productId))
+        ord.status !== "payment_pending" &&
+        ord.items?.some((item: any) => item.sellerId === sellerId || prodList.some((p: any) => p.id === item.productId))
       );
       const sortedOrders = sellerOrders.sort((a: any, b: any) => {
         const tA = a.createdAt || a.timestamp || 0;

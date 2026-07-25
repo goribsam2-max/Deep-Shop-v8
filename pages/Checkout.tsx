@@ -456,11 +456,11 @@ export default function CheckoutPage() {
         advanceAmount: resolvedAdvanceAmount ?? deliveryFee,
         deliveryFee: deliveryFee,
         couponCode: appliedPromo ? appliedPromo.code : null,
-        status: OrderStatus.PENDING,
+        status: paymentType === "advance" ? "payment_pending" : OrderStatus.PENDING,
         paymentMethod: paymentStr,
         paymentOption: paymentOptStr,
-        accountNameSender: bankingAccountName.trim(),
-        transactionId: trxStr,
+        accountNameSender: paymentType === "advance" ? "" : bankingAccountName.trim(),
+        transactionId: paymentType === "advance" ? "" : trxStr,
         shippingAddress: activeAddress.address,
         contactNumber: activeAddress.phone,
         altNumber: activeAddress.altPhone || "",
@@ -475,58 +475,60 @@ export default function CheckoutPage() {
 
       const docRef = await addDoc(collection(db, "orders"), orderData);
 
-      // Notify sellers of the new order
-      try {
-        const uniqueSellerIds = Array.from(new Set(orderData.items.map(item => item.sellerId).filter(Boolean)));
-        uniqueSellerIds.forEach((sellerId) => {
-          fetch("/api/send-push-user", {
+      // Notify sellers of the new order ONLY for non-advance (or COD/VG Coin) orders immediately
+      if (paymentType !== "advance") {
+        try {
+          const uniqueSellerIds = Array.from(new Set(orderData.items.map(item => item.sellerId).filter(Boolean)));
+          uniqueSellerIds.forEach((sellerId) => {
+            fetch("/api/send-push-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: sellerId,
+                title: "New Customer Order! 🛍️",
+                body: `You received a new order from ${activeAddress.name} for ৳${total}.`,
+                link: "/seller/dashboard"
+              })
+            }).catch(err => console.error("Seller push notification failed:", err));
+          });
+
+          // Notify admins of new order
+          fetch("/api/send-push-admin", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              userId: sellerId,
               title: "New Customer Order! 🛍️",
-              body: `You received a new order from ${activeAddress.name} for ৳${total}.`,
-              link: "/seller/dashboard"
+              body: `A new order was placed by ${activeAddress.name} for ৳${total}.`,
+              link: "/admin/orders"
             })
-          }).catch(err => console.error("Seller push notification failed:", err));
-        });
+          }).catch(err => console.error("Admin order push failed:", err));
 
-        // Notify admins of new order
-        fetch("/api/send-push-admin", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: "New Customer Order! 🛍️",
-            body: `A new order was placed by ${activeAddress.name} for ৳${total}.`,
-            link: "/admin/orders"
-          })
-        }).catch(err => console.error("Admin order push failed:", err));
-
-        // Notify the seller
-        const sellerId = orderData.items?.[0]?.sellerId;
-        if (sellerId) {
-          fetch("/api/web-push/send-order", {
-             method: "POST",
-             headers: { "Content-Type": "application/json" },
-             body: JSON.stringify({ sellerId, orderId: docRef.id })
-          }).catch(console.error);
+          // Notify the seller
+          const sellerId = orderData.items?.[0]?.sellerId;
+          if (sellerId) {
+            fetch("/api/web-push/send-order", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ sellerId, orderId: docRef.id })
+            }).catch(console.error);
+          }
+          
+          // Notify the customer themselves
+          if (user?.uid) {
+            fetch("/api/send-push-user", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                userId: user.uid,
+                title: "Order Placed Successfully! 🎉",
+                body: `Thank you for shopping! Your order for ৳${total} has been received.`,
+                link: "/my-orders"
+              })
+            }).catch(err => console.error("Customer order push failed:", err));
+          }
+        } catch (e) {
+          console.error("Failed to send order push notifications:", e);
         }
-        
-        // Notify the customer themselves
-        if (user?.uid) {
-          fetch("/api/send-push-user", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: user.uid,
-              title: "Order Placed Successfully! 🎉",
-              body: `Thank you for shopping! Your order for ৳${total} has been received.`,
-              link: "/my-orders"
-            })
-          }).catch(err => console.error("Customer order push failed:", err));
-        }
-      } catch (e) {
-        console.error("Failed to send order push notifications:", e);
       }
 
       if (orderData.affiliateRef) {
@@ -634,11 +636,7 @@ export default function CheckoutPage() {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      if (currentStep === 2 && paymentType === "advance") {
-        placeOrder();
-      } else {
-        setCurrentStep((p) => Math.min(p + 1, 3));
-      }
+      setCurrentStep((p) => Math.min(p + 1, 3));
     } else notify("Please complete the required fields.", "error");
   };
 
@@ -1097,7 +1095,6 @@ export default function CheckoutPage() {
                         </div>
                       </div>
 
-
                     </div>
                   )}
                 </CardContent>
@@ -1115,7 +1112,7 @@ export default function CheckoutPage() {
                     size="default"
                     className="text-xs sm:text-sm px-4 sm:px-6"
                   >
-                    {paymentType === "advance" ? "Checkout" : "Review Order"}
+                    Review Order
                   </Button>
                 </CardFooter>
               </Card>
@@ -1165,12 +1162,12 @@ export default function CheckoutPage() {
                           {paymentType === "cod"
                             ? "Cash on Delivery"
                             : paymentType === "vgcoin"
-                              ? `VG Coins (${advanceType})`
-                              : `${bankingMethod?.toUpperCase()} (${advanceType})`}
+                              ? `DP Coins (${advanceType})`
+                              : `bKash / Nagad Payment (${advanceType === "full" ? "Full Payment" : "Advance Booking"})`}
                         </p>
                         {paymentType === "advance" && (
-                          <p className="mt-2 text-zinc-500">
-                            TrxID: {bankingTrxId}
+                          <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                            Payment details will be submitted on the next page.
                           </p>
                         )}
                       </div>
