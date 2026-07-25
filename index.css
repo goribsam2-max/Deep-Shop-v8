@@ -519,10 +519,16 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-align: initial;
-  flex-wrap: nowrap !important;
-  white-space: nowrap !important;
+  text-align: center;
   gap: 8px;
+}
+.ntfA.ntf-nowrap {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.ntfA.ntf-wrap {
+  flex-wrap: wrap !important;
+  white-space: normal !important;
 }
 .ntfA > a.ntf-btn {
   flex-shrink: 0;

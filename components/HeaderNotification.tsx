@@ -75,25 +75,25 @@ export const HeaderNotification: React.FC = () => {
       <motion.div 
         layout
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className={`ntfC transition-all duration-300 ${expanded ? 'py-3 items-start md:items-center' : 'py-2.5 items-center'}`}
+        className={`ntfC transition-all duration-300 ${expanded ? 'py-3.5 px-4' : 'py-2.5 px-3.5'}`}
       >
-        <div className={`ntfT ${expanded ? 'overflow-visible' : 'overflow-x-auto scrollbar-none'}`}>
+        <div className={`ntfT w-full ${expanded ? 'overflow-visible' : 'overflow-x-auto scrollbar-none'}`}>
           <motion.div 
             layout 
-            className={`ntfA ${expanded ? '!flex-wrap !whitespace-normal justify-center items-center leading-relaxed gap-2' : 'flex-nowrap whitespace-nowrap'}`}
+            className={`ntfA ${expanded ? 'ntf-wrap flex flex-wrap items-center justify-center gap-2.5 text-center leading-relaxed w-full' : 'ntf-nowrap flex-nowrap whitespace-nowrap'}`}
           >
-            <span 
+            <div 
               ref={textRef}
-              className={`inline-flex items-center gap-1.5 shrink-0 ${
+              className={`text-center ${
                 expanded 
-                  ? '!whitespace-normal break-words text-center' 
-                  : (isLongText ? 'max-w-[200px] sm:max-w-[380px] md:max-w-[550px] truncate whitespace-nowrap' : 'whitespace-nowrap')
+                  ? 'w-full max-w-3xl mx-auto whitespace-normal break-words text-xs sm:text-sm leading-normal block py-1' 
+                  : (isLongText ? 'inline-flex items-center gap-1.5 shrink-0 max-w-[200px] sm:max-w-[380px] md:max-w-[550px] truncate whitespace-nowrap' : 'inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap')
               }`}
             >
-              {notifConfig.text}
+              <span>{notifConfig.text}</span>
               {notifConfig.linkEnabled && notifConfig.textLinkText && (
                 <a
-                  className="ntf-inline-link whitespace-nowrap shrink-0"
+                  className={`ntf-inline-link ${expanded ? 'inline-block ml-1.5 underline font-bold whitespace-normal break-words' : 'whitespace-nowrap shrink-0 ml-1'}`}
                   href={notifConfig.textLinkUrl || "#"}
                   target={(notifConfig.textLinkUrl && notifConfig.textLinkUrl.startsWith("http")) ? "_blank" : "_self"}
                   rel="noopener noreferrer"
@@ -101,11 +101,11 @@ export const HeaderNotification: React.FC = () => {
                   {notifConfig.textLinkText}
                 </a>
               )}
-            </span>
+            </div>
 
             {notifConfig.btnEnabled && notifConfig.buttonText && (
               <a
-                className="ntf-btn whitespace-nowrap shrink-0"
+                className="ntf-btn whitespace-nowrap shrink-0 my-0.5"
                 href={notifConfig.buttonUrl || "#"}
                 target={(notifConfig.buttonUrl && notifConfig.buttonUrl.startsWith("http")) ? "_blank" : "_self"}
                 rel="noopener noreferrer"
@@ -118,7 +118,7 @@ export const HeaderNotification: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setExpanded(!expanded)}
-                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-all cursor-pointer shrink-0 active:scale-95"
+                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-all cursor-pointer shrink-0 active:scale-95 my-0.5"
                 title={expanded ? "Show less" : "Show more"}
               >
                 <span>{expanded ? "Less" : "More"}</span>
