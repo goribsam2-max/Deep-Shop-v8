@@ -57,6 +57,12 @@ const ManageConfig: React.FC = () => {
     whatsappNumber: "+1 (724) 764-8185",
     facebookPageUrl: "https://facebook.com/deepshop.top",
     facebookPageName: "DEEP SHOP Facebook Page",
+    notificationBannerEnabled: true,
+    notificationBannerText: "Welcome to Lantro UI!",
+    notificationBannerLinkText: "Test link",
+    notificationBannerLinkUrl: "#",
+    notificationBannerBtnText: "Buy now!",
+    notificationBannerBtnUrl: "",
   });
 
   const [voiceBotOptions, setVoiceBotOptions] = useState<any[]>([
@@ -175,6 +181,75 @@ const ManageConfig: React.FC = () => {
             }
             placeholder="XXXX"
           />
+        </AccordionSection>
+
+        <AccordionSection
+          id="notifBanner"
+          title="Header Notification Banner (XML Style)"
+          icon="bell"
+          expanded={expandedSection === "notifBanner"}
+          onToggle={() =>
+            setExpandedSection(
+              expandedSection === "notifBanner" ? null : "notifBanner",
+            )
+          }
+        >
+          <div className="space-y-6">
+            <div className="p-5 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <Toggle
+                label="Enable Notification Banner below Header"
+                active={configs.notificationBannerEnabled ?? true}
+                onToggle={() =>
+                  setConfigs({
+                    ...configs,
+                    notificationBannerEnabled: !(
+                      configs.notificationBannerEnabled ?? true
+                    ),
+                  })
+                }
+              />
+            </div>
+            <Field
+              label="Notification Text"
+              value={configs.notificationBannerText}
+              onChange={(v: string) =>
+                setConfigs({ ...configs, notificationBannerText: v })
+              }
+              placeholder="e.g., Welcome to Lantro UI!"
+            />
+            <Field
+              label="Inline Text Link Label"
+              value={configs.notificationBannerLinkText}
+              onChange={(v: string) =>
+                setConfigs({ ...configs, notificationBannerLinkText: v })
+              }
+              placeholder="e.g., Test link"
+            />
+            <Field
+              label="Inline Text Link URL"
+              value={configs.notificationBannerLinkUrl}
+              onChange={(v: string) =>
+                setConfigs({ ...configs, notificationBannerLinkUrl: v })
+              }
+              placeholder="e.g., https://example.com"
+            />
+            <Field
+              label="Action Button Text"
+              value={configs.notificationBannerBtnText}
+              onChange={(v: string) =>
+                setConfigs({ ...configs, notificationBannerBtnText: v })
+              }
+              placeholder="e.g., Buy now!"
+            />
+            <Field
+              label="Action Button URL"
+              value={configs.notificationBannerBtnUrl}
+              onChange={(v: string) =>
+                setConfigs({ ...configs, notificationBannerBtnUrl: v })
+              }
+              placeholder="e.g., /cart"
+            />
+          </div>
         </AccordionSection>
 
         <AccordionSection

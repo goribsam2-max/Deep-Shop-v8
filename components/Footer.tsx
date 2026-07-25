@@ -155,6 +155,15 @@ export const Footer = () => {
           }
         }
 
+        .mainF {
+          padding-bottom: 24px;
+        }
+        @media (min-width: 768px) {
+          .mainF {
+            padding-bottom: 70px;
+          }
+        }
+
         .fotM {
           display: flex;
           flex-direction: column;

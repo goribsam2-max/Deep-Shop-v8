@@ -1075,6 +1075,8 @@ const AppContent: React.FC = () => {
         </Routes>
       </div>
       {showNav && !isPageLoading && <BottomMenu />}
+      <div className="stwRainbow" />
+      <div className="stwBlurRainbow" />
       <AnimatePresence>
         {isAppLocked && (
           <motion.div 

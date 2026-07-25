@@ -8,6 +8,7 @@ import Icon from './Icon';
 
 import { useTheme } from './ThemeContext';
 import { Header } from './ui/header-3';
+import { HeaderNotification } from './HeaderNotification';
 import { PageLoadingContext } from '../App';
 
 
@@ -79,6 +80,7 @@ const DesktopLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <div className="flex-1 flex w-full flex-col min-h-[calc(100vh-56px)]">
         {/* Main Content Area */}
         <div className={`transition-all duration-300 flex-1 w-full max-w-full ${sidebarOpen ? 'md:pl-72' : ''} bg-transparent`}>
+          {location.pathname === '/' && !isPageLoading && <HeaderNotification />}
           <div className="w-full max-w-[1920px] mx-auto pb-0 min-h-[70vh]">
             {children}
           </div>
