@@ -548,7 +548,7 @@ const fetchIPAndLocation = async () => {
       };
     }
   } catch (e) {
-    console.error("ipapi failed, trying ipify", e);
+    // ipapi fetch failed (CORS or network limits), fallback silently to ipify
   }
   try {
     const res = await fetch("https://api.ipify.org?format=json");
@@ -557,7 +557,7 @@ const fetchIPAndLocation = async () => {
       return { ip: data.ip || "Unknown", location: "Unknown Location" };
     }
   } catch (e) {
-    console.error("ipify failed", e);
+    // ipify failed
   }
   return { ip: "Unknown", location: "Unknown Location" };
 };
@@ -901,17 +901,27 @@ const AppContent: React.FC = () => {
     // Initially online
     setOnline(true);
 
-    // Heartbeat every 25 seconds
+    // Heartbeat every 18 seconds
     const interval = setInterval(() => {
-      setOnline(true);
-    }, 25000);
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        setOnline(true);
+      }
+    }, 18000);
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
         setOnline(true);
       } else {
         setOnline(false);
       }
+    };
+
+    const handleOffline = () => {
+      setOnline(false);
+    };
+
+    const handleOnline = () => {
+      setOnline(true);
     };
 
     const handleBeforeUnload = () => {
@@ -920,11 +930,17 @@ const AppContent: React.FC = () => {
 
     window.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handleBeforeUnload);
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handleBeforeUnload);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
       setOnline(false);
     };
   }, [userData?.uid]);

@@ -127,8 +127,8 @@ export async function subscribeToWebPush(uidParam?: string) {
             return subscription;
         }
     } catch(e: any) {
-        console.error('Web Push setup error', e);
-        return { error: e.message || "Failed to subscribe" };
+        console.warn('Web Push setup notice:', e?.message || e);
+        return { error: e?.message || "Failed to subscribe" };
     }
     return false;
 }

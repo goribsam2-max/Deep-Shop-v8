@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   updateDoc,
+  setDoc,
   query,
   where,
   onSnapshot
@@ -170,6 +171,7 @@ const SellerDashboard: React.FC = () => {
   });
 
   const dataFetchedRef = useRef(false);
+  const settingsLoadedRef = useRef(false);
 
   // Authentication & Profile listener
   useEffect(() => {
@@ -177,6 +179,25 @@ const SellerDashboard: React.FC = () => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
+        // Load local cached seller settings as fallback if available
+        try {
+          const cached = localStorage.getItem(`vibe_seller_settings_${u.uid}`);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed.shopName) setShopName(parsed.shopName);
+            if (parsed.photoURL) setShopLogo(parsed.photoURL);
+            if (parsed.tiktokId) setTiktokId(parsed.tiktokId);
+            if (parsed.bkashNumber) setBkashNumber(parsed.bkashNumber);
+            if (parsed.nagadNumber) setNagadNumber(parsed.nagadNumber);
+            if (parsed.defaultAdvanceAmount !== undefined) setDefaultAdvanceAmount(parsed.defaultAdvanceAmount);
+            if (parsed.taxRate !== undefined) setTaxRate(parsed.taxRate);
+            if (parsed.binNumber !== undefined) setBinNumber(parsed.binNumber);
+            if (parsed.taxInclusive !== undefined) setTaxInclusive(parsed.taxInclusive);
+          }
+        } catch (e) {
+          console.error("Error reading local seller settings", e);
+        }
+
         unsubProfile = onSnapshot(doc(db, "users", u.uid), (snap) => {
           if (snap.exists()) {
             const profile = snap.data();
@@ -206,16 +227,19 @@ const SellerDashboard: React.FC = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (sellerProfile) {
-      setShopName(sellerProfile.shopName || "");
-      setShopLogo(sellerProfile.photoURL || sellerProfile.avatarUrl || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80");
-      setTiktokId(sellerProfile.tiktokId || "");
-      setBkashNumber(sellerProfile.bkashNumber || "");
-      setNagadNumber(sellerProfile.nagadNumber || "");
-      setDefaultAdvanceAmount(sellerProfile.defaultAdvanceAmount ?? "");
-      setTaxRate(sellerProfile.taxRate ?? 5);
-      setBinNumber(sellerProfile.binNumber || "");
-      setTaxInclusive(sellerProfile.taxInclusive ?? true);
+    if (sellerProfile && !settingsLoadedRef.current) {
+      if (sellerProfile.shopName) setShopName(sellerProfile.shopName);
+      if (sellerProfile.photoURL || sellerProfile.avatarUrl) {
+        setShopLogo(sellerProfile.photoURL || sellerProfile.avatarUrl);
+      }
+      if (sellerProfile.tiktokId) setTiktokId(sellerProfile.tiktokId);
+      if (sellerProfile.bkashNumber) setBkashNumber(sellerProfile.bkashNumber);
+      if (sellerProfile.nagadNumber) setNagadNumber(sellerProfile.nagadNumber);
+      if (sellerProfile.defaultAdvanceAmount !== undefined) setDefaultAdvanceAmount(sellerProfile.defaultAdvanceAmount);
+      if (sellerProfile.taxRate !== undefined) setTaxRate(sellerProfile.taxRate);
+      if (sellerProfile.binNumber !== undefined) setBinNumber(sellerProfile.binNumber);
+      if (sellerProfile.taxInclusive !== undefined) setTaxInclusive(sellerProfile.taxInclusive);
+      settingsLoadedRef.current = true;
     }
   }, [sellerProfile]);
 
@@ -223,19 +247,22 @@ const SellerDashboard: React.FC = () => {
   const saveStoreSettings = async () => {
     if (!user) return;
     setIsSavingSettings(true);
+    const updateData = {
+      shopName: shopName,
+      photoURL: shopLogo,
+      avatarUrl: shopLogo,
+      tiktokId: tiktokId,
+      bkashNumber: bkashNumber,
+      nagadNumber: nagadNumber,
+      defaultAdvanceAmount: defaultAdvanceAmount === "" ? "" : Number(defaultAdvanceAmount),
+      taxRate: Number(taxRate),
+      binNumber: binNumber,
+      taxInclusive: taxInclusive
+    };
     try {
-      await updateDoc(doc(db, "users", user.uid), {
-        shopName: shopName,
-        photoURL: shopLogo,
-        avatarUrl: shopLogo,
-        tiktokId: tiktokId,
-        bkashNumber: bkashNumber,
-        nagadNumber: nagadNumber,
-        defaultAdvanceAmount: defaultAdvanceAmount === "" ? "" : Number(defaultAdvanceAmount),
-        taxRate: Number(taxRate),
-        binNumber: binNumber,
-        taxInclusive: taxInclusive
-      });
+      await setDoc(doc(db, "users", user.uid), updateData, { merge: true });
+      localStorage.setItem(`vibe_seller_settings_${user.uid}`, JSON.stringify(updateData));
+      setSellerProfile((prev: any) => ({ ...prev, ...updateData }));
       notify("Store configuration saved successfully!", "success");
     } catch (err: any) {
       console.error(err);

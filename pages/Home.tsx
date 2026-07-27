@@ -561,7 +561,7 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
                 )
                 .slice(0, 10)
                 .map((product, index) => (
-                  <div key={product.id} className="min-w-[220px] sm:min-w-[260px] snap-center transform hover:scale-[1.02] transition-all duration-300">
+                  <div key={product.id ? `${product.id}-horiz-${index}` : index} className="min-w-[220px] sm:min-w-[260px] snap-center transform hover:scale-[1.02] transition-all duration-300">
                     <ProductCard product={product} index={index} />
                   </div>
                 ))}
@@ -606,11 +606,11 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
                   ),
                 )
                 .slice(0, 6)
-                .map((product) => {
+                .map((product, idx) => {
                   const price = product.isOffer && product.offerPrice ? product.offerPrice : product.price;
                   return (
                     <div 
-                      key={product.id}
+                      key={product.id ? `${product.id}-chikon-${idx}` : idx}
                       onClick={() => navigate(`/product/${product.id}`)}
                       className="flex items-center gap-4 bg-zinc-50 dark:bg-[#1c1c1e] hover:bg-zinc-100 dark:hover:bg-[#252528] p-3 rounded-2xl cursor-pointer transition border border-zinc-100 dark:border-zinc-800/80 group/row shadow-sm"
                     >
@@ -687,7 +687,7 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
               : filteredProducts
                   .slice(0, displayedCount)
                   .map((product, index) => (
-                    <ProductCard key={product.id} product={product} index={index} />
+                    <ProductCard key={product.id ? `${product.id}-${index}` : index} product={product} index={index} />
                   ))}
           </div>
           
@@ -749,8 +749,8 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
                 transform: `translateX(-${activeCategoryBanner * 100}%)`,
               }}
             >
-              {categoryBanners.map((banner) => (
-                <div key={banner.id} className="min-w-full h-full relative">
+              {categoryBanners.map((banner, idx) => (
+                <div key={banner.id ? `${banner.id}-${idx}` : idx} className="min-w-full h-full relative">
                   <img
                     src={banner.imageUrl}
                     alt="Banner"
@@ -784,8 +784,8 @@ const Home: React.FC<{ userData?: any }> = ({ userData }) => {
               className="flex transition-transform duration-700 ease-[cubic-bezier(0.23, 1, 0.32, 1)] h-full"
               style={{ transform: `translateX(-${activeBottomBanner * 100}%)` }}
             >
-              {bottomBanners.map((banner) => (
-                <div key={banner.id} className="min-w-full h-full relative">
+              {bottomBanners.map((banner, idx) => (
+                <div key={banner.id ? `${banner.id}-${idx}` : idx} className="min-w-full h-full relative">
                   <img
                     src={banner.imageUrl}
                     alt="Banner"

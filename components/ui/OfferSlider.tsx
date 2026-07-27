@@ -188,8 +188,8 @@ export function OfferSlider({ products, autoSlide = true }: { products: Product[
 
       <div className="overflow-hidden pb-8 pt-2" ref={emblaRef}>
         <div className="flex -ml-4 sm:-ml-6">
-          {products.map((product) => (
-            <OfferProductCard key={product.id} product={product} />
+          {products.map((product, idx) => (
+            <OfferProductCard key={product.id ? `${product.id}-${idx}` : idx} product={product} />
           ))}
         </div>
       </div>

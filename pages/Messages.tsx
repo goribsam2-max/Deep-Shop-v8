@@ -252,7 +252,7 @@ export default function Messages() {
     } else {
       newParams.delete('tab');
     }
-    setSearchParams(newParams);
+    setSearchParams(newParams, { replace: true });
   };
 
   const [chats, setChats] = useState<any[]>([]);
@@ -263,6 +263,11 @@ export default function Messages() {
   const activeChat = chatIdParam 
     ? (chats.find(c => c.otherUser?.id === chatIdParam || c.id === chatIdParam) || tempActiveChat)
     : null;
+
+  const otherUid = activeChat?.otherUser?.id || activeChat?.otherUser?.uid;
+  const otherTypingData = activeChat?.typingState?.[otherUid];
+  const isOtherTyping = otherTypingData?.status === 'typing' && (Date.now() - (otherTypingData?.updatedAt || 0) < 5000);
+  const isOtherRecording = otherTypingData?.status === 'recording' && (Date.now() - (otherTypingData?.updatedAt || 0) < 12000);
 
   const [showPrivateChatMenu, setShowPrivateChatMenu] = useState(false);
   const [showP2pSearch, setShowP2pSearch] = useState(false);
@@ -278,11 +283,18 @@ export default function Messages() {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<any>(null);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOtherTyping || isOtherRecording) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isOtherTyping, isOtherRecording]);
 
   // Voice Recording states
   const [isRecording, setIsRecording] = useState(false);
@@ -1895,6 +1907,14 @@ const handleCreateChannel = async () => {
 
     if (!activeChat) return;
 
+    setIsTyping(false);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (activeChat.id && user?.uid) {
+      updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+        [`typingState.${user.uid}`]: null
+      }).catch(console.error);
+    }
+
     const messageText = newMessage.trim();
     setNewMessage('');
     
@@ -2589,6 +2609,39 @@ const handleCreateChannel = async () => {
       notify('Failed to clear chat history', 'error');
     }
   };
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setNewMessage(val);
+
+    if (!activeChat || activeChat.isNew || !activeChat.id || !user?.uid) return;
+
+    if (val.trim().length > 0) {
+      if (!isTyping) {
+        setIsTyping(true);
+        updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+          [`typingState.${user.uid}`]: { status: 'typing', updatedAt: Date.now() }
+        }).catch(console.error);
+      }
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+        if (activeChat?.id && user?.uid) {
+          updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+            [`typingState.${user.uid}`]: null
+          }).catch(console.error);
+        }
+      }, 3500);
+    } else {
+      setIsTyping(false);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      if (activeChat?.id && user?.uid) {
+        updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+          [`typingState.${user.uid}`]: null
+        }).catch(console.error);
+      }
+    }
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -2626,6 +2679,12 @@ const handleCreateChannel = async () => {
       setIsRecording(true);
       setRecordingDuration(0);
       
+      if (activeChat && !activeChat.isNew && activeChat.id && user?.uid) {
+        updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+          [`typingState.${user.uid}`]: { status: 'recording', updatedAt: Date.now() }
+        }).catch(console.error);
+      }
+
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration(prev => prev + 1);
       }, 1000);
@@ -2642,6 +2701,11 @@ const handleCreateChannel = async () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       clearInterval(recordingTimerRef.current);
+      if (activeChat && !activeChat.isNew && activeChat.id && user?.uid) {
+        updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+          [`typingState.${user.uid}`]: null
+        }).catch(console.error);
+      }
     }
   };
   
@@ -2654,6 +2718,11 @@ const handleCreateChannel = async () => {
       // Don't save
       audioChunksRef.current = [];
       setRecordedAudioUrl(null);
+      if (activeChat && !activeChat.isNew && activeChat.id && user?.uid) {
+        updateDoc(doc(db, 'p2p_chats', activeChat.id), {
+          [`typingState.${user.uid}`]: null
+        }).catch(console.error);
+      }
     }
   };
 
@@ -2837,7 +2906,7 @@ const handleCreateChannel = async () => {
                               if (activeMessagesTab === 'settings') {
                                   setActiveMessagesTab('chats');
                               } else {
-                                  navigate(-1);
+                                  navigate('/');
                               }
                           }} 
                           className="md:hidden p-2 -ml-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 transition shrink-0 active:scale-95"
@@ -3355,10 +3424,15 @@ const handleCreateChannel = async () => {
                  ) : (
                      chats.map((chat, idx) => {
                           const isUnread = chat.lastMessage && chat.lastSenderId !== user.uid && (!chat.seenBy || !chat.seenBy.includes(user.uid));
+                          const chatOtherUid = chat.otherUser?.id || chat.otherUser?.uid;
+                          const isChatUserOnline = chatOtherUid ? chatUsersPresence[chatOtherUid]?.isOnline : false;
+                          const chatTypingData = chat.typingState?.[chatOtherUid];
+                          const isChatOtherTyping = chatTypingData?.status === 'typing' && (Date.now() - (chatTypingData?.updatedAt || 0) < 5000);
+                          const isChatOtherRecording = chatTypingData?.status === 'recording' && (Date.now() - (chatTypingData?.updatedAt || 0) < 12000);
                           return (
                              <div 
                                 key={chat.id || `chat-${idx}`}
-                                 onClick={() => setSearchParams({ chatId: chat.otherUser?.id || "" })}
+                                 onClick={() => setSearchParams({ chatId: chat.otherUser?.id || "" }, { replace: true })}
                                 className={cn(
                                      "flex items-center gap-3 p-4 cursor-pointer transition-all hover:bg-[#F8F9FB] dark:hover:bg-zinc-800/50 relative border-b border-zinc-50 dark:border-zinc-800/20",
                                      activeChat?.id === chat.id ? "bg-[#F8F9FB] dark:bg-zinc-800 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-[#4E4AEB] before:rounded-r-full" : ""
@@ -3374,9 +3448,11 @@ const handleCreateChannel = async () => {
                                              </div>
                                          )}
                                      </div>
-                                     {/* Active Dot (Mock) */}
-                                     {idx % 3 === 0 && (
-                                         <div className="absolute bottom-0.5 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900"></div>
+                                     {/* Active Presence Dot */}
+                                     {isChatUserOnline ? (
+                                         <div className="absolute bottom-0.5 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 animate-pulse"></div>
+                                     ) : (
+                                         <div className="absolute bottom-0.5 right-0 w-3 h-3 rounded-full bg-zinc-300 dark:bg-zinc-600 border-2 border-white dark:border-zinc-900"></div>
                                      )}
                                  </div>
                                  
@@ -3393,9 +3469,25 @@ const handleCreateChannel = async () => {
                                          )}
                                      </div>
                                      <div className="flex justify-between items-center">
-                                         <p className={cn("text-xs truncate pr-4", isUnread ? "font-bold text-zinc-800 dark:text-zinc-200" : "font-semibold text-zinc-400")}>
-                                             {chat.lastMessage}
-                                         </p>
+                                         {isChatOtherTyping ? (
+                                             <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 truncate flex items-center gap-1.5 animate-pulse">
+                                                 <span className="flex gap-0.5 items-center">
+                                                     <span className="w-1 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                                     <span className="w-1 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                                     <span className="w-1 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-full animate-bounce"></span>
+                                                 </span>
+                                                 <span>typing...</span>
+                                             </p>
+                                         ) : isChatOtherRecording ? (
+                                             <p className="text-xs font-bold text-rose-500 truncate flex items-center gap-1 animate-pulse">
+                                                 <Mic className="w-3 h-3 text-rose-500 animate-pulse" />
+                                                 <span>recording audio...</span>
+                                             </p>
+                                         ) : (
+                                             <p className={cn("text-xs truncate pr-4", isUnread ? "font-bold text-zinc-800 dark:text-zinc-200" : "font-semibold text-zinc-400")}>
+                                                 {chat.lastMessage}
+                                             </p>
+                                         )}
                                          {isUnread && (
                                              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
                                                  <span className="text-white text-[10px] font-bold">
@@ -5026,7 +5118,7 @@ const handleCreateChannel = async () => {
                      <div className="flex items-center gap-4 min-w-0">
                          <button 
                            type="button"
-                           onClick={() => setSearchParams({})} 
+                           onClick={() => setSearchParams({}, { replace: true })}
                            className="md:hidden p-1 transition shrink-0"
                            title="Back to Chats"
                          >
@@ -5034,7 +5126,7 @@ const handleCreateChannel = async () => {
                          </button>
                          <button 
                            type="button"
-                           onClick={() => setSearchParams({})} 
+                           onClick={() => setSearchParams({}, { replace: true })}
                            className="hidden md:block p-1 transition shrink-0 hover:opacity-70"
                            title="Back to Chats"
                          >
@@ -5042,7 +5134,7 @@ const handleCreateChannel = async () => {
                          </button>
                          
                          <div className="relative w-10 h-10 shrink-0">
-                             <div className="w-full h-full rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-200 dark:bg-zinc-800">
+                             <div className="w-full h-full rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800">
                                  {activeChat.otherUser?.photoURL ? (
                                      <img src={activeChat.otherUser.photoURL} alt={activeChat.otherUser.displayName} className="w-full h-full object-cover" />
                                  ) : (
@@ -5051,6 +5143,11 @@ const handleCreateChannel = async () => {
                                      </div>
                                  )}
                              </div>
+                             {otherUserPresence?.isOnline ? (
+                                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 animate-pulse"></span>
+                             ) : (
+                                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-zinc-400 border-2 border-white dark:border-zinc-900"></span>
+                             )}
                          </div>
                          
                          <div className="min-w-0 flex flex-col justify-center">
@@ -5059,9 +5156,25 @@ const handleCreateChannel = async () => {
                                  {(activeChat.otherUser?.kycStatus === "verified" || activeChat.otherUser?.verified) && <VerifiedIcon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                              </h3>
                               <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-[12px] font-medium text-zinc-400">
-                                      Online
-                                  </p>
+                                  {isOtherTyping ? (
+                                      <p className="text-[12px] font-bold text-indigo-600 dark:text-indigo-400 animate-pulse flex items-center gap-1">
+                                          <span>typing...</span>
+                                      </p>
+                                  ) : isOtherRecording ? (
+                                      <p className="text-[12px] font-bold text-rose-500 animate-pulse flex items-center gap-1">
+                                          <Mic className="w-3 h-3 text-rose-500" />
+                                          <span>recording audio...</span>
+                                      </p>
+                                  ) : otherUserPresence?.isOnline ? (
+                                      <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                          <span>Online</span>
+                                      </p>
+                                  ) : (
+                                      <p className="text-[12px] font-medium text-zinc-400">
+                                          {getLastActiveText(otherUserPresence)}
+                                      </p>
+                                  )}
                                   {activeChat?.autoDeleteTimer && (
                                       <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-full flex items-center gap-1">
                                           <Clock className="w-3 h-3" />

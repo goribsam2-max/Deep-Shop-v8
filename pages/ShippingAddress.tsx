@@ -27,23 +27,59 @@ const ShippingAddress: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (auth.currentUser) {
-      getDoc(doc(db, "users", auth.currentUser.uid)).then((snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.addresses && Array.isArray(data.addresses)) {
-            setSavedAddresses(data.addresses);
-            if (data.addresses.length > 0) setSelectedAddressId(data.addresses[0].id);
+    const { onAuthStateChanged } = import("firebase/auth");
+    const unsub = auth.onAuthStateChanged((u) => {
+      if (u) {
+        getDoc(doc(db, "users", u.uid)).then((snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            let addrs: any[] = [];
+            if (data.addresses && Array.isArray(data.addresses) && data.addresses.length > 0) {
+              addrs = data.addresses;
+            }
+            const localAddresses = JSON.parse(localStorage.getItem("vibe_shipping_addresses_v2") || "[]");
+            if (localAddresses.length > 0) {
+              // Merge local addresses if any
+              const combined = [...addrs];
+              localAddresses.forEach((loc: any) => {
+                if (!combined.some(c => c.id === loc.id || c.address === loc.address)) {
+                  combined.push(loc);
+                }
+              });
+              addrs = combined;
+              updateDoc(doc(db, "users", u.uid), { addresses: addrs }).catch(console.error);
+              localStorage.removeItem("vibe_shipping_addresses_v2");
+            }
+            if (addrs.length > 0) {
+              setSavedAddresses(addrs);
+              setSelectedAddressId(addrs[0].id);
+            } else if (data.address) {
+              const singleAddr = {
+                id: "addr_1",
+                name: data.displayName || "User",
+                phone: data.phoneNumber || "",
+                district: "",
+                street: data.address,
+                landmark: "",
+                category: "Home",
+                isDefault: true,
+                address: data.address
+              };
+              setSavedAddresses([singleAddr]);
+              setSelectedAddressId(singleAddr.id);
+            }
           }
-        }
+          setLoading(false);
+        }).catch(() => setLoading(false));
+      } else {
+        const localAddresses = JSON.parse(localStorage.getItem("vibe_shipping_addresses_v2") || "[]");
+        setSavedAddresses(localAddresses);
+        if (localAddresses.length > 0) setSelectedAddressId(localAddresses[0].id);
         setLoading(false);
-      });
-    } else {
-      const localAddresses = JSON.parse(localStorage.getItem("vibe_shipping_addresses_v2") || "[]");
-      setSavedAddresses(localAddresses);
-      if (localAddresses.length > 0) setSelectedAddressId(localAddresses[0].id);
-      setLoading(false);
-    }
+      }
+    });
+
+    return () => unsub();
   }, []);
 
   const handleAdd = async () => {
@@ -56,25 +92,30 @@ const ShippingAddress: React.FC = () => {
       ...newAddress,
       address: computedAddress
     };
-    if (auth.currentUser) {
+    const newAddrs = [...savedAddresses, newAddrObj];
+    const user = auth.currentUser;
+
+    if (user) {
       try {
         const { setDoc } = await import("firebase/firestore");
-        await setDoc(doc(db, "users", auth.currentUser.uid), { addresses: arrayUnion(newAddrObj) }, { merge: true });
-        setSavedAddresses([...savedAddresses, newAddrObj]);
+        await setDoc(doc(db, "users", user.uid), { 
+          addresses: newAddrs,
+          address: computedAddress 
+        }, { merge: true });
+        setSavedAddresses(newAddrs);
         setSelectedAddressId(newAddrObj.id);
         setIsAdding(false);
         setNewAddress({ name: "", phone: "", district: "", street: "", landmark: "", category: "Home", isDefault: true });
-        notify("Address saved!", "success");
+        notify("Address saved to account!", "success");
       } catch (e) {
         notify("Error saving address.", "error");
       }
     } else {
-      const newAddrs = [...savedAddresses, newAddrObj];
       setSavedAddresses(newAddrs);
       setSelectedAddressId(newAddrObj.id);
       setIsAdding(false);
       localStorage.setItem("vibe_shipping_addresses_v2", JSON.stringify(newAddrs));
-      notify("Address saved Locally!", "success");
+      notify("Address saved locally!", "success");
     }
   };
 

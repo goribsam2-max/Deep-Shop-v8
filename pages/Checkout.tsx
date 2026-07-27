@@ -212,31 +212,46 @@ export default function CheckoutPage() {
       setBankingMethod("bank");
     }
 
-    if (auth.currentUser) {
-      getDoc(doc(db, "users", auth.currentUser.uid)).then((snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          setUserCoins(data.coins || 0);
-          if (data.addresses && Array.isArray(data.addresses)) {
-            setSavedAddresses(data.addresses);
-            if (data.addresses.length > 0)
+    const unsubAuth = auth.onAuthStateChanged((u) => {
+      if (u) {
+        getDoc(doc(db, "users", u.uid)).then((snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            setUserCoins(data.coins || 0);
+            if (data.addresses && Array.isArray(data.addresses) && data.addresses.length > 0) {
+              setSavedAddresses(data.addresses);
               setSelectedAddressId(data.addresses[0].id);
+            } else if (data.address) {
+              const singleAddr = {
+                id: "addr_1",
+                name: data.displayName || "User",
+                phone: data.phoneNumber || "",
+                address: data.address,
+                isDefault: true
+              };
+              setSavedAddresses([singleAddr]);
+              setSelectedAddressId(singleAddr.id);
+            } else {
+              setIsAddingNewAddress(true);
+            }
           } else {
             setIsAddingNewAddress(true);
           }
-        }
+          setIsLoading(false);
+        }).catch(() => setIsLoading(false));
+      } else {
+        const localAddresses = JSON.parse(
+          localStorage.getItem("vibe_shipping_addresses_v2") || "[]",
+        );
+        setSavedAddresses(localAddresses);
+        if (localAddresses.length > 0) setSelectedAddressId(localAddresses[0].id);
+        else setIsAddingNewAddress(true);
         setIsLoading(false);
-      });
-    } else {
-      const localAddresses = JSON.parse(
-        localStorage.getItem("vibe_shipping_addresses_v2") || "[]",
-      );
-      setSavedAddresses(localAddresses);
-      if (localAddresses.length > 0) setSelectedAddressId(localAddresses[0].id);
-      else setIsAddingNewAddress(true);
-      setIsLoading(false);
-    }
+      }
+    });
+
     return () => {
+      unsubAuth();
       unsubSettings();
       unsubPaymentSettings();
       unsubPayments();
@@ -325,23 +340,27 @@ export default function CheckoutPage() {
       id: Math.random().toString(36).substring(7),
       ...newAddress,
     };
-    if (auth.currentUser) {
+    const newAddrs = [...savedAddresses, newAddrObj];
+    const u = auth.currentUser;
+    if (u) {
       try {
         const { setDoc } = await import("firebase/firestore");
         await setDoc(
-          doc(db, "users", auth.currentUser.uid),
-          { addresses: arrayUnion(newAddrObj) },
+          doc(db, "users", u.uid),
+          { 
+            addresses: newAddrs,
+            address: newAddress.address
+          },
           { merge: true },
         );
-        setSavedAddresses([...savedAddresses, newAddrObj]);
+        setSavedAddresses(newAddrs);
         setSelectedAddressId(newAddrObj.id);
         setIsAddingNewAddress(false);
-        notify("Address saved.", "success");
+        notify("Address saved to account.", "success");
       } catch (e) {
         notify("Error saving address.", "error");
       }
     } else {
-      const newAddrs = [...savedAddresses, newAddrObj];
       setSavedAddresses(newAddrs);
       setSelectedAddressId(newAddrObj.id);
       setIsAddingNewAddress(false);
@@ -349,6 +368,7 @@ export default function CheckoutPage() {
         "vibe_shipping_addresses_v2",
         JSON.stringify(newAddrs),
       );
+      notify("Address saved locally.", "success");
     }
   };
 
