@@ -47,13 +47,24 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, isAdmin }) => {
   const holdTimeoutRef = useRef<any>(null);
   const isPressHold = useRef(false);
 
-  // Group stories by category (acting as user/bucket)
+  // Group stories by category/seller and filter 48h active stories
   const groupedStories = React.useMemo(() => {
-    const groups: { [key: string]: Story[] } = {};
-    stories.forEach(story => {
-      if (!groups[story.category]) groups[story.category] = [];
-      groups[story.category].push(story);
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    const validStories = stories.filter(story => {
+      if (!story.createdAt) return true;
+      const createdTime = new Date(story.createdAt).getTime();
+      return !isNaN(createdTime) && (now - createdTime) < FORTY_EIGHT_HOURS;
     });
+
+    const groups: { [key: string]: Story[] } = {};
+    validStories.forEach(story => {
+      const groupKey = story.category || "General";
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(story);
+    });
+
     return Object.entries(groups).map(([category, items]) => ({
       category,
       items: items.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -106,12 +117,55 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, isAdmin }) => {
     return () => clearInterval(timerRef.current);
   }, [activeStoryIndex, currentSubIndex, isPaused]);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync background audio playback when story changes, unmuted, or paused
   useEffect(() => {
-    // Handling audio if present
-    if (audioPlayerRef.current) {
-      // react-player handles playing through the 'playing' prop natively
+    if (!currentStory?.audioUrl) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      return;
     }
-  }, [isPaused, currentStory]);
+
+    if (audioRef.current) {
+      audioRef.current.src = currentStory.audioUrl;
+      audioRef.current.currentTime = currentStory.audioStart || 0;
+      audioRef.current.muted = isMuted;
+
+      if (!isPaused && !isMuted) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.log("Audio play caught:", err);
+          });
+        }
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [currentStory?.audioUrl, currentStory?.audioStart, activeStoryIndex, currentSubIndex]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!isMuted && !isPaused && currentStory?.audioUrl) {
+        audioRef.current.play().catch(err => console.log("Unmute play error:", err));
+      } else if (isMuted) {
+        audioRef.current.pause();
+      }
+    }
+  }, [isMuted]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPaused) {
+        audioRef.current.pause();
+      } else if (!isMuted && currentStory?.audioUrl) {
+        audioRef.current.play().catch(err => console.log("Unpause play error:", err));
+      }
+    }
+  }, [isPaused]);
 
   const handleNext = () => {
     if (activeStoryIndex === null || !activeGroup) return;
@@ -194,17 +248,16 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, isAdmin }) => {
     <div className="w-full">
       {/* Story List (Bubbles) */}
       <div className="flex items-center space-x-4 overflow-x-auto pb-4 px-1 scrollbar-hide no-scrollbar">
-        {isAdmin && (
-          <button 
-            onClick={() => navigate("/admin/stories")}
-            className="flex flex-col items-center space-y-1 group shrink-0"
-          >
-            <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border-2 border-zinc-900 dark:border-zinc-100 border-dashed group-active:scale-95 transition-all">
-              <Plus size={24} className="text-zinc-900 dark:text-zinc-100" />
-            </div>
-            <span className="text-[10px] font-bold text-zinc-500">Add Story</span>
-          </button>
-        )}
+        {/* Add Story Button */}
+        <button 
+          onClick={() => navigate("/add-story")}
+          className="flex flex-col items-center space-y-1 group shrink-0"
+        >
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 flex items-center justify-center text-white border-2 border-white dark:border-zinc-900 group-active:scale-95 transition-all shadow-md">
+            <Plus size={26} className="text-white font-bold" />
+          </div>
+          <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">Add Story</span>
+        </button>
         
         {groupedStories.map((group, idx) => (
           <button
@@ -213,6 +266,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, isAdmin }) => {
               setActiveStoryIndex(idx);
               setCurrentSubIndex(0);
               setProgress(0);
+              setIsMuted(false);
             }}
             className="flex flex-col items-center space-y-1 shrink-0 group active:scale-95 transition-all"
           >
@@ -335,35 +389,36 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ stories, isAdmin }) => {
                 )}
                 
                 {currentStory.audioUrl && (
-                  <div className="absolute top-[-9999px] left-[-9999px] w-[1px] h-[1px] overflow-hidden">
-                    {/* @ts-ignore */}
-                    <Player
-                      ref={audioPlayerRef}
-                      url={currentStory.audioUrl}
-                      playing={!isPaused}
-                      muted={isMuted}
-                      width="200%"
-                      height="200%"
-                      onReady={(player: any) => {
-                        if (currentStory.audioStart) {
-                          player.seekTo(currentStory.audioStart, 'seconds');
-                        }
-                      }}
-                      config={{
-                        file: { forceAudio: !!currentStory.audioUrl && !currentStory.audioUrl.match(/youtube\.com|youtu\.be|tiktok\.com|vimeo\.com|soundcloud\.com/i) },
-                        youtube: {
-                          playerVars: { autoplay: 1, origin: window.location.origin }
-                        }
-                      }}
-                    />
-                  </div>
+                  <audio
+                    ref={audioRef}
+                    src={currentStory.audioUrl}
+                    preload="auto"
+                    loop
+                    playsInline
+                  />
                 )}
               </div>
 
-              {/* Info Overlay */}
-              <div className="absolute bottom-24 left-6 right-6 z-40">
-                 <h3 className="text-white text-xl font-bold mb-2">{currentStory.category}</h3>
-                 <p className="text-white/80 text-sm">Tap to view next</p>
+              {/* Info & Song Overlay */}
+              <div className="absolute bottom-24 left-6 right-6 z-40 space-y-1">
+                 <h3 className="text-white text-xl font-black tracking-tight drop-shadow-md">{currentStory.category}</h3>
+                 
+                 {/* Song & Beat Equalizer */}
+                 {((currentStory as any).songTitle || currentStory.audioUrl) && (
+                   <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 w-fit text-white">
+                     <span className="text-xs">🎵</span>
+                     <span className="text-xs font-bold truncate max-w-[180px]">
+                       {(currentStory as any).songTitle || "Background Music"} {(currentStory as any).songArtist ? `• ${(currentStory as any).songArtist}` : ""}
+                     </span>
+                     {/* Equalizer Soundwave Beat Bars */}
+                     <div className="flex items-end gap-0.5 h-3 ml-1">
+                       <span className="w-0.5 bg-pink-400 rounded-full animate-bounce h-2" style={{ animationDuration: '0.4s' }} />
+                       <span className="w-0.5 bg-pink-400 rounded-full animate-bounce h-3" style={{ animationDuration: '0.6s' }} />
+                       <span className="w-0.5 bg-pink-400 rounded-full animate-bounce h-1.5" style={{ animationDuration: '0.3s' }} />
+                       <span className="w-0.5 bg-pink-400 rounded-full animate-bounce h-2.5" style={{ animationDuration: '0.5s' }} />
+                     </div>
+                   </div>
+                 )}
               </div>
 
               {/* CTA */}

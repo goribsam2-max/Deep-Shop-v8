@@ -52,9 +52,33 @@ const ManageStories: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [stories, setStories] = useState<any[]>([]);
+  const [dbSongs, setDbSongs] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"stories" | "songs">("stories");
   const [loading, setLoading] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [isAddingSong, setIsAddingSong] = useState(false);
   const [editStoryId, setEditStoryId] = useState<string | null>(null);
+
+  const [songTitle, setSongTitle] = useState("");
+  const [songArtist, setSongArtist] = useState("");
+  const [songCoverUrl, setSongCoverUrl] = useState("");
+  const [songMp3Url, setSongMp3Url] = useState("");
+  const [songCoverUploading, setSongCoverUploading] = useState(false);
+
+  const handleSongCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSongCoverUploading(true);
+    try {
+      const url = await uploadToImgbb(file);
+      setSongCoverUrl(url);
+      notify("Cover image uploaded successfully!", "success");
+    } catch (err: any) {
+      notify("Failed to upload cover: " + err.message, "error");
+    } finally {
+      setSongCoverUploading(false);
+    }
+  };
 
   const [type, setType] = useState<"image" | "video">("image");
   const [category, setCategory] = useState("");
@@ -73,8 +97,52 @@ const ManageStories: React.FC = () => {
     const unsubscribe = onSnapshot(collection(db, "stories"), (snap) => {
       setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-    return () => unsubscribe();
+    const unsubSongs = onSnapshot(collection(db, "story_songs"), (snap) => {
+      setDbSongs(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return () => {
+      unsubscribe();
+      unsubSongs();
+    };
   }, []);
+
+  const handleSaveSong = async () => {
+    if (!songTitle.trim() || !songMp3Url.trim()) {
+      notify("Please fill song title and MP3/GitHub URL", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      await addDoc(collection(db, "story_songs"), {
+        title: songTitle.trim(),
+        artist: songArtist.trim() || "Unknown Artist",
+        coverUrl: songCoverUrl.trim() || "",
+        url: songMp3Url.trim(),
+        createdAt: Date.now()
+      });
+      notify("Song added successfully!", "success");
+      setSongTitle("");
+      setSongArtist("");
+      setSongCoverUrl("");
+      setSongMp3Url("");
+      setIsAddingSong(false);
+    } catch (e: any) {
+      notify("Failed to save song: " + e.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSong = async (id: string) => {
+    if (await confirm({ title: "Delete Song", message: "Are you sure you want to delete this background song?" })) {
+      try {
+        await deleteDoc(doc(db, "story_songs", id));
+        notify("Song deleted", "success");
+      } catch (e) {
+        notify("Failed to delete song", "error");
+      }
+    }
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -197,27 +265,156 @@ const ManageStories: React.FC = () => {
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-10 min-h-screen bg-zinc-50 dark:bg-zinc-800 animate-fade-in relative overflow-hidden">
-      <div className="flex items-center justify-between mb-12 relative z-10 animate-stagger-1">
-        <div className="flex items-center space-x-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mb-1">
+            Stories & Songs Manager
+          </h1>
+          <p className="text-zinc-400 text-xs font-medium">
+             Manage active seller flash stories & background music tracks.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-200 dark:bg-zinc-800 rounded-2xl border border-zinc-300 dark:border-zinc-700">
+            <button
+              onClick={() => setActiveTab("stories")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "stories"
+                  ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+              }`}
+            >
+              Stories ({stories.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("songs")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === "songs"
+                  ? "bg-pink-500 text-white shadow-sm"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+              }`}
+            >
+              Story Songs ({dbSongs.length})
+            </button>
+          </div>
+
+          {activeTab === "stories" ? (
+            <button
+              onClick={() => {
+                resetForm();
+                setIsAdding(true);
+              }}
+              className="px-5 py-2.5 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+            >
+              Add Story
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsAddingSong(true)}
+              className="px-5 py-2.5 rounded-2xl font-bold text-xs shadow-lg transition-all active:scale-95 bg-pink-600 text-white hover:bg-pink-700"
+            >
+              + Add Song
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Modal for Adding Song */}
+      <Modal
+        isOpen={isAddingSong}
+        onClose={() => setIsAddingSong(false)}
+        title="Add Background Song (MP3 / Audio)"
+      >
+        <div className="space-y-4 pt-2">
           <div>
-            <h1 className="text-xl md:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 mb-1.5 text-shine">
-              Stories Setup
-            </h1>
-            <p className="text-zinc-400 text-[10px] md:text-xs font-bold tracking-normal">
-               Manage active flash stories
-            </p>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 block">Song Title *</label>
+            <input
+              type="text"
+              value={songTitle}
+              onChange={(e) => setSongTitle(e.target.value)}
+              placeholder="e.g. Lofi Vibes - Bengali Beats"
+              className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 block">Artist Name</label>
+            <input
+              type="text"
+              value={songArtist}
+              onChange={(e) => setSongArtist(e.target.value)}
+              placeholder="e.g. Artist / Musician"
+              className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 block">MP3 Audio Direct Link *</label>
+            <input
+              type="text"
+              value={songMp3Url}
+              onChange={(e) => setSongMp3Url(e.target.value)}
+              placeholder="https://.../song.mp3"
+              className="w-full h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium"
+            />
+            <p className="text-[10px] text-zinc-400 mt-1">Paste any valid MP3 or CDN audio URL.</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1 block">
+              Cover Image (ImgBB Upload or Image URL)
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={songCoverUrl}
+                onChange={(e) => setSongCoverUrl(e.target.value)}
+                placeholder="https://..."
+                className="flex-1 h-10 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium"
+              />
+              <label className="px-3.5 py-2.5 bg-pink-500/10 hover:bg-pink-500/20 text-pink-600 dark:text-pink-400 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-pink-500/20 flex items-center gap-1.5 shrink-0">
+                {songCoverUploading ? (
+                  <span>Uploading...</span>
+                ) : (
+                  <>
+                    <Icon name="upload" className="text-xs" />
+                    <span>Upload Cover</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSongCoverUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+            {songCoverUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img src={songCoverUrl} className="w-10 h-10 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700" alt="Cover Preview" />
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Cover attached!</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3 pt-3">
+            <button
+              onClick={() => setIsAddingSong(false)}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-600 bg-zinc-100 dark:bg-zinc-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveSong}
+              disabled={loading}
+              className="px-5 py-2 bg-pink-600 text-white rounded-xl text-xs font-bold hover:bg-pink-700 disabled:opacity-50"
+            >
+              {loading ? "Saving..." : "Save Song"}
+            </button>
           </div>
         </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setIsAdding(true);
-          }}
-          className={`px-6 py-3 rounded-full font-bold text-[10px] tracking-normal shadow-lg transition-all active:scale-95 border hover-tilt hover-glow bg-zinc-900 text-white border-zinc-900 hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900`}
-        >
-          Add Story
-        </button>
-      </div>
+      </Modal>
 
       <Modal
         isOpen={isAdding}
@@ -320,74 +517,129 @@ const ManageStories: React.FC = () => {
         </div>
       </Modal>
 
-      <div className="max-w-5xl mx-auto relative z-10 animate-stagger-2">
-        <ItemGroup className="flex flex-col gap-4">
-          {stories.map((story) => (
-            <details key={story.id} className="group border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-white dark:bg-zinc-900 shadow-sm transition-all duration-300" open={false}>
-              <summary className="flex cursor-pointer items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <div className="flex items-center gap-4 w-full">
-                  <ItemMedia variant="image" className="size-12 shrink-0 border border-border p-1 bg-muted relative">
-                    {story.type === "video" ? (
-                      <>
-                        <div className="w-full h-full pointer-events-none">
-                          {/* @ts-ignore */}
-                          <Player url={story.mediaUrl} width="100%" height="100%" playing={false} controls={false} light={true} style={{objectFit: 'cover'}} />
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                          <Play className="size-4 text-white" />
-                        </div>
-                      </>
+      <div className="max-w-5xl mx-auto relative z-10">
+        {activeTab === "songs" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {dbSongs.map((song) => (
+              <div
+                key={song.id}
+                className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:border-pink-500/50 transition-all"
+              >
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="w-12 h-12 bg-pink-500/10 text-pink-600 dark:text-pink-400 rounded-xl flex items-center justify-center shrink-0 border border-pink-500/20 font-black text-sm overflow-hidden">
+                    {song.coverUrl ? (
+                      <img src={song.coverUrl} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <img src={story.mediaUrl} className="w-full h-full object-cover" alt="" />
+                      "🎵"
                     )}
-                  </ItemMedia>
-                  <ItemContent className="flex-1 overflow-hidden pr-2">
-                    <ItemTitle className="truncate">{story.category}</ItemTitle>
-                    <ItemDescription className="flex items-center gap-2 overflow-hidden">
-                      <span className="font-mono text-xs uppercase bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded-sm shrink-0">{story.type}</span>
-                      <span className="truncate">{story.linkUrl || "No Link Provided"}</span>
-                    </ItemDescription>
-                  </ItemContent>
-                  <ItemActions className="justify-end shrink-0 ml-auto flex items-center gap-2 z-10 bg-zinc-50 dark:bg-zinc-800/50">
-                    <Button size="icon" variant="outline" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(story); }}>
-                      <Icon name="pencil" className="size-3" />
-                    </Button>
-                    <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(story.id); }}>
-                      <Icon name="trash" className="size-3" />
-                    </Button>
-                  </ItemActions>
+                  </div>
+                  <div className="overflow-hidden">
+                    <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate">{song.title}</h3>
+                    <p className="text-xs text-zinc-400 truncate">{song.artist || "Unknown Artist"}</p>
+                    <a
+                      href={song.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-pink-500 hover:underline truncate block"
+                    >
+                      {song.url}
+                    </a>
+                  </div>
                 </div>
-              </summary>
-              <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-center">
-                <div className="relative aspect-[9/16] w-full max-w-[280px] rounded-2xl overflow-hidden bg-black shadow-lg">
-                  {story.type === "video" ? (
-                    /* @ts-ignore */
-                    <Player url={story.mediaUrl} width="100%" height="100%" playing={true} controls={true} muted={true} loop={true} />
-                  ) : (
-                    <img src={story.mediaUrl} className="w-full h-full object-contain bg-zinc-950" alt="" />
-                  )}
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleDeleteSong(song.id)}
+                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                    title="Delete Song"
+                  >
+                    <Icon name="trash" className="size-4" />
+                  </button>
                 </div>
               </div>
-            </details>
-          ))}
-          {stories.length === 0 && (
-            <div className="col-span-full py-20 text-center bg-white dark:bg-zinc-900 border border-solid border-zinc-200 dark:border-zinc-800 rounded-2xl">
-              <Icon name="layer-group" className="text-zinc-300 text-lg mb-4" />
-              <p className="text-xs font-bold  tracking-normal text-zinc-400">
-                No stories active
-              </p>
-              <button
-                onClick={() => {
-                  resetForm();
-                  setIsAdding(true);
-                }}
-                className="mt-4 text-[10px] font-bold  tracking-normal text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors"
-              >
-                Create First Story
-              </button>
-            </div>
-          )}
-        </ItemGroup>
+            ))}
+
+            {dbSongs.length === 0 && (
+              <div className="col-span-full py-16 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                <p className="text-xs font-bold text-zinc-400 mb-3">No custom songs added yet.</p>
+                <button
+                  onClick={() => setIsAddingSong(true)}
+                  className="px-4 py-2 bg-pink-600 text-white font-bold text-xs rounded-xl"
+                >
+                  + Add First Song
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <ItemGroup className="flex flex-col gap-4">
+            {stories.map((story) => (
+              <details key={story.id} className="group border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden [&_summary::-webkit-details-marker]:hidden bg-white dark:bg-zinc-900 shadow-sm transition-all duration-300" open={false}>
+                <summary className="flex cursor-pointer items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                  <div className="flex items-center gap-4 w-full">
+                    <ItemMedia variant="image" className="size-12 shrink-0 border border-border p-1 bg-muted relative">
+                      {story.type === "video" ? (
+                        <>
+                          <div className="w-full h-full pointer-events-none">
+                            {/* @ts-ignore */}
+                            <Player url={story.mediaUrl} width="100%" height="100%" playing={false} controls={false} light={true} style={{objectFit: 'cover'}} />
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                            <Play className="size-4 text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <img src={story.mediaUrl} className="w-full h-full object-cover" alt="" />
+                      )}
+                    </ItemMedia>
+                    <ItemContent className="flex-1 overflow-hidden pr-2">
+                      <ItemTitle className="truncate">{story.category}</ItemTitle>
+                      <ItemDescription className="flex items-center gap-2 overflow-hidden">
+                        <span className="font-mono text-xs uppercase bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded-sm shrink-0">{story.type}</span>
+                        <span className="truncate">{story.linkUrl || "No Link Provided"}</span>
+                      </ItemDescription>
+                    </ItemContent>
+                    <ItemActions className="justify-end shrink-0 ml-auto flex items-center gap-2 z-10 bg-zinc-50 dark:bg-zinc-800/50">
+                      <Button size="icon" variant="outline" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEdit(story); }}>
+                        <Icon name="pencil" className="size-3" />
+                      </Button>
+                      <Button size="icon" variant="destructive" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(story.id); }}>
+                        <Icon name="trash" className="size-3" />
+                      </Button>
+                    </ItemActions>
+                  </div>
+                </summary>
+                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex justify-center">
+                  <div className="relative aspect-[9/16] w-full max-w-[280px] rounded-2xl overflow-hidden bg-black shadow-lg">
+                    {story.type === "video" ? (
+                      /* @ts-ignore */
+                      <Player url={story.mediaUrl} width="100%" height="100%" playing={true} controls={true} muted={true} loop={true} />
+                    ) : (
+                      <img src={story.mediaUrl} className="w-full h-full object-contain bg-zinc-950" alt="" />
+                    )}
+                  </div>
+                </div>
+              </details>
+            ))}
+            {stories.length === 0 && (
+              <div className="col-span-full py-20 text-center bg-white dark:bg-zinc-900 border border-solid border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                <Icon name="layer-group" className="text-zinc-300 text-lg mb-4" />
+                <p className="text-xs font-bold  tracking-normal text-zinc-400">
+                  No stories active
+                </p>
+                <button
+                  onClick={() => {
+                    resetForm();
+                    setIsAdding(true);
+                  }}
+                  className="mt-4 text-[10px] font-bold  tracking-normal text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 px-4 py-2 rounded-lg transition-colors"
+                >
+                  Create First Story
+                </button>
+              </div>
+            )}
+          </ItemGroup>
+        )}
       </div>
     </div>
   );

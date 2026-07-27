@@ -175,9 +175,9 @@ const SEOProvider = () => {
                  "closes": "22:00"
                },
                "sameAs": [
-                 "https://www.facebook.com/vibegadget.shop/",
-                 "https://www.instagram.com/vibegadgets.shop/",
-                 "https://www.youtube.com/@vibegadgets"
+                 "https://facebook.com/deepshop.top",
+                 "https://www.instagram.com/deepshop.top",
+                 "https://www.youtube.com/@deepshopbd"
                ],
                "knowsAbout": ["Border Cross Products", "Border Cross Devices", "Illegal Products Buy Sell Site", "Genuine Mobiles"]
              }
@@ -294,6 +294,7 @@ import CreateBlog from './pages/CreateBlog';
 import NotFound from './pages/NotFound';
 import RegionSelect from './pages/RegionSelect';
 import SellerDashboard from './pages/seller/Dashboard';
+import AddStory from './pages/seller/AddStory';
 import LoginDevices from './pages/LoginDevices';
 import BiometricSetup from './pages/BiometricSetup';
 
@@ -1027,6 +1028,7 @@ const AppContent: React.FC = () => {
           <Route path="/new-password" element={<PageWrapper><NewPassword /></PageWrapper>} />
           <Route path="/forgot-password" element={<PageWrapper><ForgotPassword /></PageWrapper>} />
           <Route path="/seller/dashboard" element={<PageWrapper><SellerDashboard /></PageWrapper>} />
+          <Route path="/add-story" element={<PageWrapper><AddStory /></PageWrapper>} />
           <Route path="/__/auth/action" element={<PageWrapper><NewPassword /></PageWrapper>} />
           <Route path="/auth/action" element={<PageWrapper><NewPassword /></PageWrapper>} />
           

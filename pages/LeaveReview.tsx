@@ -62,7 +62,7 @@ const LeaveReview: React.FC = () => {
         productId,
         sellerId: product.sellerId || "system",
         userId: auth.currentUser.uid,
-        userName: auth.currentUser.displayName || "Vibe Customer",
+        userName: auth.currentUser.displayName || "DEEP SHOP Customer",
         userPhoto: auth.currentUser.photoURL || "",
         rating,
         comment: comment.trim(),

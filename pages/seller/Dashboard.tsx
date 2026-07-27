@@ -152,7 +152,10 @@ const SellerDashboard: React.FC = () => {
     existingImages: [] as string[],
     coinReward: "",
     isCodEnabled: true,
+    advanceType: "custom" as "full" | "custom",
+    advanceMode: "fixed" as "fixed" | "percentage",
     advanceAmount: "",
+    advancePercentage: "",
   });
 
   // Story Form State
@@ -420,6 +423,12 @@ const SellerDashboard: React.FC = () => {
       const combinedImages = [...(productForm.existingImages || []), ...uploadedUrls];
       const primaryImage = combinedImages[0] || "";
 
+      const calcAdvanceAmount = productForm.advanceType === "full"
+        ? Number(productForm.price || 0)
+        : (productForm.advanceMode === "percentage"
+            ? Math.round(Number(productForm.price || 0) * (Number(productForm.advancePercentage || 0) / 100))
+            : Number(productForm.advanceAmount || 0));
+
       const productData: any = {
         name: productForm.name,
         price: Number(productForm.price),
@@ -432,7 +441,10 @@ const SellerDashboard: React.FC = () => {
         videoUrl: productForm.videoUrl,
         coinReward: Number(productForm.coinReward),
         isCodEnabled: productForm.isCodEnabled,
-        advanceAmount: productForm.advanceAmount ? Number(productForm.advanceAmount) : 0,
+        advanceType: productForm.advanceType || "custom",
+        advanceMode: productForm.advanceType === "full" ? "fixed" : (productForm.advanceMode || "fixed"),
+        advancePercentage: productForm.advanceType === "custom" && productForm.advanceMode === "percentage" ? Number(productForm.advancePercentage || 0) : 0,
+        advanceAmount: calcAdvanceAmount,
         sellerId: user.uid,
         sellerName: sellerProfile?.shopName || "Registered Seller",
         shopLogo: sellerProfile?.photoURL || "",
@@ -478,7 +490,10 @@ const SellerDashboard: React.FC = () => {
       existingImages: [],
       coinReward: "0",
       isCodEnabled: true,
+      advanceType: "custom",
+      advanceMode: "fixed",
       advanceAmount: "",
+      advancePercentage: "",
     });
     setCustomCategoryName("");
   };
@@ -499,7 +514,10 @@ const SellerDashboard: React.FC = () => {
       existingImages: prod.images || (prod.image ? [prod.image] : []),
       coinReward: String(prod.coinReward || "0"),
       isCodEnabled: prod.isCodEnabled ?? true,
+      advanceType: prod.advanceType || "custom",
+      advanceMode: prod.advanceMode || (prod.advancePercentage ? "percentage" : "fixed"),
       advanceAmount: String(prod.advanceAmount || ""),
+      advancePercentage: String(prod.advancePercentage || ""),
     });
     if (!["Border Cross Products", "Mobile", "Smart Watch", "Earbuds", "Accessories"].includes(prod.category)) {
       setCustomCategoryName(prod.category);
@@ -1478,9 +1496,85 @@ const SellerDashboard: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                       <Label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-1 mb-1.5 block">Advance Payment Required (৳)</Label>
-                       <Input type="number" value={productForm.advanceAmount} onChange={e => setProductForm({...productForm, advanceAmount: e.target.value})} placeholder="e.g. 5.00" className="rounded-xl bg-[#F5F5F7] dark:bg-zinc-800 border-transparent dark:border-zinc-700 h-12 text-zinc-900 dark:text-zinc-100 dark:text-zinc-100" />
-                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400 dark:text-zinc-500 ml-1 mt-1">Specific advance amount required to order this product.</p>
+                       <Label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-1 mb-1.5 block">
+                         Advance Payment Option (এডভান্স পেমেন্ট অপশন)
+                       </Label>
+                       
+                       <div className="grid grid-cols-2 gap-3 mb-3">
+                         <button
+                           type="button"
+                           onClick={() => setProductForm({ ...productForm, advanceType: "custom" })}
+                           className={`p-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                             productForm.advanceType === "custom"
+                               ? "border-[#EF8020] bg-[#EF8020]/10 text-[#EF8020]"
+                               : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                           }`}
+                         >
+                           Custom Advance (কাস্টম)
+                         </button>
+                         <button
+                           type="button"
+                           onClick={() => setProductForm({ ...productForm, advanceType: "full" })}
+                           className={`p-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                             productForm.advanceType === "full"
+                               ? "border-[#EF8020] bg-[#EF8020]/10 text-[#EF8020]"
+                               : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                           }`}
+                         >
+                           Full Amount Advance (100% ফুল)
+                         </button>
+                       </div>
+
+                       {productForm.advanceType === "full" ? (
+                         <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                           ⚡ Customer needs to pay 100% full payment (৳{productForm.price || 0}) advance at checkout.
+                         </div>
+                       ) : (
+                         <div className="space-y-3 p-3.5 bg-[#F5F5F7] dark:bg-zinc-800/60 rounded-xl border border-zinc-200/80 dark:border-zinc-700/80">
+                           <div className="flex items-center gap-3">
+                             <Label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Mode:</Label>
+                             <CustomDropdown
+                               options={["Fixed Amount (৳)", "Percentage (%)"]}
+                               value={productForm.advanceMode === "percentage" ? "Percentage (%)" : "Fixed Amount (৳)"}
+                               onChange={(val) => setProductForm({ ...productForm, advanceMode: val === "Percentage (%)" ? "percentage" : "fixed" })}
+                               className="h-10 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl"
+                             />
+                           </div>
+
+                           {productForm.advanceMode === "percentage" ? (
+                             <div>
+                               <Label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 block">
+                                 Advance Percentage (%)
+                               </Label>
+                               <div className="flex items-center gap-3">
+                                 <Input
+                                   type="number"
+                                   value={productForm.advancePercentage}
+                                   onChange={(e) => setProductForm({ ...productForm, advancePercentage: e.target.value })}
+                                   placeholder="e.g. 10 or 20"
+                                   className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 h-10 text-xs text-zinc-900 dark:text-zinc-100"
+                                 />
+                                 <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-emerald-500/10 px-3 py-2.5 rounded-xl border border-emerald-500/20">
+                                   Calc: ৳{Math.round((Number(productForm.price || 0) * (Number(productForm.advancePercentage || 0) / 100)))}
+                                 </div>
+                               </div>
+                             </div>
+                           ) : (
+                             <div>
+                               <Label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 block">
+                                 Custom Fixed Amount (৳)
+                               </Label>
+                               <Input
+                                 type="number"
+                                 value={productForm.advanceAmount}
+                                 onChange={(e) => setProductForm({ ...productForm, advanceAmount: e.target.value })}
+                                 placeholder="e.g. 150 or 500"
+                                 className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 h-10 text-xs text-zinc-900 dark:text-zinc-100"
+                               />
+                             </div>
+                           )}
+                         </div>
+                       )}
                     </div>
                     <div>
                       <Label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-1 mb-1.5 block">Category *</Label>

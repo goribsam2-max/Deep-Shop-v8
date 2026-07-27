@@ -34,6 +34,10 @@ export interface Product {
   offerPrice?: number;
   offerEndTime?: number;
   views?: number;
+  advanceType?: 'full' | 'custom' | 'none';
+  advanceMode?: 'fixed' | 'percentage';
+  advanceAmount?: number;
+  advancePercentage?: number;
 }
 
 export interface UserProfile {
@@ -187,6 +191,21 @@ export interface WithdrawRequest {
   bkashNumber: string;
   accountName: string;
   status: 'Pending' | 'Completed' | 'Rejected';
+  createdAt: number;
+  type?: 'coin' | 'affiliate' | 'general';
+  paymentMethod?: 'bKash' | 'Nagad';
+  coinAmount?: number;
+  userEmail?: string;
+  userPhone?: string;
+  reason?: string;
+}
+
+export interface StorySong {
+  id: string;
+  title: string;
+  artist: string;
+  coverImage?: string;
+  audioUrl: string;
   createdAt: number;
 }
 

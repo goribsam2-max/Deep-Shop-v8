@@ -243,23 +243,31 @@ export default function CheckoutPage() {
     };
   }, [navigate]);
 
+  const [hasFullAdvanceProduct, setHasFullAdvanceProduct] = useState(false);
+
   useEffect(() => {
     const resolveAdvance = async () => {
       let totalAdvance = 0;
+      let fullAdvanceFound = false;
       try {
         const { getDoc, doc } = await import("firebase/firestore");
         for (const item of items) {
           let itemAdvance = null;
           
-          // 1. Check if item has product-specific advanceAmount
-          if (item.advanceAmount !== undefined && item.advanceAmount !== null && item.advanceAmount !== "") {
-            itemAdvance = Number(item.advanceAmount);
-          } else {
-            // Fetch product doc to make sure we have latest
-            const prodSnap = await getDoc(doc(db, "products", item.id));
-            if (prodSnap.exists() && prodSnap.data().advanceAmount !== undefined && prodSnap.data().advanceAmount !== null && prodSnap.data().advanceAmount !== "") {
-              itemAdvance = Number(prodSnap.data().advanceAmount);
+          const prodSnap = await getDoc(doc(db, "products", item.id));
+          const pData = prodSnap.exists() ? prodSnap.data() : (item as any);
+
+          if (pData?.advanceType === "full" || (item as any)?.advanceType === "full") {
+            fullAdvanceFound = true;
+            itemAdvance = Number(item.price || pData.price || 0);
+          } else if (pData?.advanceType === "custom" || pData?.advanceMode || pData?.advancePercentage) {
+            if (pData.advanceMode === "percentage" && pData.advancePercentage > 0) {
+              itemAdvance = Math.round((Number(item.price || pData.price || 0) * (Number(pData.advancePercentage) / 100)));
+            } else if (pData.advanceAmount !== undefined && pData.advanceAmount !== null && pData.advanceAmount !== "") {
+              itemAdvance = Number(pData.advanceAmount);
             }
+          } else if (item.advanceAmount !== undefined && item.advanceAmount !== null && item.advanceAmount !== "") {
+            itemAdvance = Number(item.advanceAmount);
           }
           
           // 2. If not product-specific, check seller's defaultAdvanceAmount
@@ -283,9 +291,13 @@ export default function CheckoutPage() {
           totalAdvance += itemAdvance * (item.quantity || 1);
         }
         setResolvedAdvanceAmount(totalAdvance);
+        setHasFullAdvanceProduct(fullAdvanceFound);
+        if (fullAdvanceFound) {
+          setPaymentType("advance");
+          setAdvanceType("full");
+        }
       } catch (err) {
         console.error("Error resolving advance amount:", err);
-        // Fallback
         setResolvedAdvanceAmount(deliveryFee);
       }
     };
@@ -840,14 +852,14 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {!isForeign && (
                       <button
-                        disabled={isGift || isCodDisabledBySellers}
+                        disabled={isGift || isCodDisabledBySellers || hasFullAdvanceProduct}
                         onClick={() => setPaymentType("cod")}
                         className={cn(
                           "flex flex-col items-center gap-3 p-6 border-2 rounded-2xl transition-colors",
                           paymentType === "cod"
                             ? "border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800/50 dark:bg-emerald-900/10"
                             : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
-                          (isGift || isCodDisabledBySellers) && "opacity-50 cursor-not-allowed",
+                          (isGift || isCodDisabledBySellers || hasFullAdvanceProduct) && "opacity-50 cursor-not-allowed",
                         )}
                       >
                         <Truck className="h-8 w-8 text-zinc-700 dark:text-zinc-300" />
@@ -856,7 +868,7 @@ export default function CheckoutPage() {
                             Cash on Delivery
                           </div>
                           <div className="text-xs font-semibold text-zinc-500 mt-1">
-                            {isCodDisabledBySellers ? "Disabled by Seller" : "Pay at doorstep"}
+                            {hasFullAdvanceProduct ? "Full Payment Advance Required" : "Pay rest on delivery"}
                           </div>
                         </div>
                       </button>
@@ -943,7 +955,7 @@ export default function CheckoutPage() {
                           {isForeign ? "Confirm Full Payment with Coins" : "Select Amount to Pay with Coins"}
                         </Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {!isForeign && (
+                          {!isForeign && !hasFullAdvanceProduct && (
                             <button
                               onClick={() => {
                                 const reqAmt = resolvedAdvanceAmount ?? deliveryFee;
@@ -989,7 +1001,7 @@ export default function CheckoutPage() {
                             }}
                             className={cn(
                               "flex items-center justify-between p-4 border-2 rounded-xl text-left",
-                              advanceType === "full" || isForeign
+                              advanceType === "full" || isForeign || hasFullAdvanceProduct
                                 ? "border-amber-500 bg-amber-50 dark:bg-amber-900/10"
                                 : "border-zinc-200 dark:border-zinc-800",
                             )}
@@ -1052,7 +1064,7 @@ export default function CheckoutPage() {
                           Select Amount to Pay Now
                         </Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           {!isForeign && (
+                           {!isForeign && !hasFullAdvanceProduct && (
                             <button
                               onClick={() => setAdvanceType("delivery")}
                               className={cn(
@@ -1077,7 +1089,7 @@ export default function CheckoutPage() {
                             onClick={() => setAdvanceType("full")}
                             className={cn(
                               "flex items-center justify-between p-4 border-2 rounded-xl text-left",
-                              advanceType === "full" || isForeign
+                              advanceType === "full" || isForeign || hasFullAdvanceProduct
                                 ? "border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800/50 dark:bg-emerald-900/10"
                                 : "border-zinc-200 dark:border-zinc-800",
                             )}

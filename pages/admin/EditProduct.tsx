@@ -30,7 +30,10 @@ const EditProduct: React.FC = () => {
     offerPrice: 0,
     modelUrl: "",
     videoUrl: "",
+    advanceType: "custom",
+    advanceMode: "fixed",
     advanceAmount: "",
+    advancePercentage: "",
   });
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
 
@@ -55,7 +58,10 @@ const EditProduct: React.FC = () => {
             offerPrice: product.offerPrice || 0,
             modelUrl: product.modelUrl || "",
             videoUrl: product.videoUrl || "",
-            advanceAmount: product.advanceAmount !== undefined ? String(product.advanceAmount) : "",
+            advanceType: product.advanceType || "custom",
+            advanceMode: product.advanceMode || (product.advancePercentage ? "percentage" : "fixed"),
+            advanceAmount: product.advanceAmount !== undefined && product.advanceAmount !== null ? String(product.advanceAmount) : "",
+            advancePercentage: product.advancePercentage !== undefined && product.advancePercentage !== null ? String(product.advancePercentage) : "",
           });
         } else {
           notify("Product not found", "error");
@@ -89,6 +95,12 @@ const EditProduct: React.FC = () => {
 
       const categoryValue = formData.category === "Custom" ? formData.customCategory : formData.category;
 
+      const calcAdvance = formData.advanceType === "full"
+        ? Number(formData.price || 0)
+        : (formData.advanceMode === "percentage"
+            ? Math.round(Number(formData.price || 0) * (Number(formData.advancePercentage || 0) / 100))
+            : Number(formData.advanceAmount || 0));
+
       const productData: any = {
         name: formData.name,
         price: Number(formData.price),
@@ -101,13 +113,11 @@ const EditProduct: React.FC = () => {
         videoUrl: formData.videoUrl || "",
         image: finalImageUrl,
         images: finalImages,
+        advanceType: formData.advanceType || "custom",
+        advanceMode: formData.advanceType === "full" ? "fixed" : (formData.advanceMode || "fixed"),
+        advancePercentage: formData.advanceType === "custom" && formData.advanceMode === "percentage" ? Number(formData.advancePercentage || 0) : 0,
+        advanceAmount: calcAdvance,
       };
-
-      if (formData.advanceAmount.trim() !== "") {
-        productData.advanceAmount = Number(formData.advanceAmount);
-      } else {
-        productData.advanceAmount = null;
-      }
 
       await updateDoc(doc(db, "products", id), productData);
       notify("Product updated successfully", "success");
@@ -241,17 +251,85 @@ const EditProduct: React.FC = () => {
           </div>
 
           <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6 space-y-4">
-            <h3 className="font-bold text-sm text-zinc-700 dark:text-zinc-300">Booking / Advance Fee</h3>
-            <div className="space-y-2">
-              <Label htmlFor="advanceAmount">Advance Amount (Optional - Blank to use seller defaults)</Label>
-              <Input
-                id="advanceAmount"
-                type="number"
-                placeholder="e.g. 1000"
-                value={formData.advanceAmount}
-                onChange={(e) => setFormData({ ...formData, advanceAmount: e.target.value })}
-              />
+            <h3 className="font-bold text-sm text-zinc-700 dark:text-zinc-300">Advance Payment Setting (এডভান্স অপশন)</h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, advanceType: "custom" })}
+                className={`p-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                  formData.advanceType === "custom"
+                    ? "border-[#EF8020] bg-[#EF8020]/10 text-[#EF8020]"
+                    : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                }`}
+              >
+                Custom Advance
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, advanceType: "full" })}
+                className={`p-3 rounded-xl border text-xs font-bold transition-all text-center ${
+                  formData.advanceType === "full"
+                    ? "border-[#EF8020] bg-[#EF8020]/10 text-[#EF8020]"
+                    : "border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300"
+                }`}
+              >
+                Full Amount Advance (100%)
+              </button>
             </div>
+
+            {formData.advanceType === "full" ? (
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                ⚡ Customer will be required to pay 100% full amount (৳{formData.price || 0}) advance at checkout.
+              </div>
+            ) : (
+              <div className="space-y-3 p-3.5 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center gap-3">
+                  <Label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">Advance Mode:</Label>
+                  <select
+                    value={formData.advanceMode}
+                    onChange={(e: any) => setFormData({ ...formData, advanceMode: e.target.value })}
+                    className="h-10 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 font-semibold text-zinc-800 dark:text-zinc-200"
+                  >
+                    <option value="fixed">Fixed Amount (৳)</option>
+                    <option value="percentage">Percentage (%)</option>
+                  </select>
+                </div>
+
+                {formData.advanceMode === "percentage" ? (
+                  <div>
+                    <Label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 block">
+                      Percentage (%)
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="number"
+                        value={formData.advancePercentage}
+                        onChange={(e) => setFormData({ ...formData, advancePercentage: e.target.value })}
+                        placeholder="e.g. 10 or 20"
+                        className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 h-10 text-xs"
+                      />
+                      <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-emerald-500/10 px-3 py-2.5 rounded-xl border border-emerald-500/20">
+                        Calc: ৳{Math.round((Number(formData.price || 0) * (Number(formData.advancePercentage || 0) / 100)))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 mb-1 block">
+                      Fixed Advance Amount (৳)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={formData.advanceAmount}
+                      onChange={(e) => setFormData({ ...formData, advanceAmount: e.target.value })}
+                      placeholder="e.g. 150 or 500"
+                      className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 h-10 text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6 space-y-4">
