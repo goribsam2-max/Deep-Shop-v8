@@ -1566,14 +1566,6 @@ export default function CheckoutPage() {
                               <p className="text-[11px] text-amber-700 dark:text-amber-300">
                                 সেলার টেলিগ্রাম/হোয়াটসঅ্যাপে আপনার ভয়েস শুনে মেসেজে গেটওয়ে লিংক দিলে এখানে বিকাশ/নগদ গেটওয়ে সক্রিয় হবে।
                               </p>
-                              <a
-                                href="/seller/dashboard?tab=cash_on_approvals"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block text-[11px] font-bold text-amber-800 dark:text-amber-200 underline mt-1"
-                              >
-                                সেলার ড্যাশবোর্ড Approvals ওপেন করুন →
-                              </a>
                             </div>
                           )
                         )}
@@ -1631,9 +1623,9 @@ export default function CheckoutPage() {
                     onClick={placeOrder}
                     disabled={!validateStep(3) || isLoading}
                     size="default"
-                    className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-lg shadow-black/10 dark:shadow-white/10 text-white dark:text-zinc-900 border-0 text-xs sm:text-sm px-4 sm:px-6 flex-1 sm:flex-none"
+                    className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-lg shadow-black/10 dark:shadow-white/10 text-white dark:text-zinc-900 border-0 text-xs sm:text-sm px-3.5 sm:px-5 flex-1 sm:flex-none"
                   >
-                    <Lock className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> {paymentType === 'cash_on_rules' ? ((cashOnRulesSellerInfo?.approved || cashOnRulesApprovedBySeller) ? `Pay ৳150 via ${selectedGateway === 'bkash' ? 'bKash' : 'Nagad'} & Complete Order` : 'Complete Order (Submit for Approval)') : paymentType === 'advance' ? (t('Checkout & Pay') || 'Checkout & Pay') : (t('Place Order') || 'Complete Order')}
+                    <Lock className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> {paymentType === 'cash_on_rules' ? ((cashOnRulesSellerInfo?.approved || cashOnRulesApprovedBySeller) ? `Pay ৳150 via ${selectedGateway === 'bkash' ? 'bKash' : 'Nagad'} & Complete Order` : 'Submit for Approval') : paymentType === 'advance' ? (t('Checkout & Pay') || 'Checkout & Pay') : (t('Place Order') || 'Complete Order')}
                   </Button>
                 </CardFooter>
               </Card>
