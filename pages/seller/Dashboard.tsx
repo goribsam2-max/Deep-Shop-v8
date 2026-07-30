@@ -1,6 +1,6 @@
 import { sendPushNotification } from "../../lib/push";
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   collection,
   addDoc,
@@ -197,15 +197,24 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
 
 const SellerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const notify = useNotify();
   const confirm = useConfirm();
   const [user, setUser] = useState<User | null>(null);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   
   // Custom navigation structure (Tabs/views inside the full-screen space)
+  const initialTab = (searchParams.get("tab") as any) || "home";
   const [activeTab, setActiveTab] = useState<
-    "home" | "orders" | "products" | "blog" | "settings_store" | "settings_payment" | "settings_shipping" | "settings_coupons" | "settings_categories" | "settings_members" | "add_product" | "edit_product" | "add_story" | "more" | "settings_tax" | "custom_payments" | "exchanges"
-  >("home");
+    "home" | "orders" | "products" | "blog" | "settings_store" | "settings_payment" | "settings_shipping" | "settings_coupons" | "settings_categories" | "settings_members" | "add_product" | "edit_product" | "add_story" | "more" | "settings_tax" | "custom_payments" | "exchanges" | "cash_on_approvals"
+  >(initialTab);
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam === "cash_on_approvals") {
+      setActiveTab("cash_on_approvals");
+    }
+  }, [searchParams]);
 
   // Dynamic Store Settings states
   const [shopName, setShopName] = useState("");
@@ -940,6 +949,18 @@ const SellerDashboard: React.FC = () => {
             {orders.filter(o => o.status === "pending").length > 0 && (
               <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {orders.filter(o => o.status === "pending").length}
+              </span>
+            )}
+          </button>
+
+          <button onClick={() => { setActiveTab("cash_on_approvals"); setSelectedOrderId(null); }} className={`flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "cash_on_approvals" ? "bg-[#EF8020]/10 text-[#EF8020]" : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800"} w-full`}>
+            <div className="flex items-center gap-3">
+              <CheckCircle className={`w-5 h-5 ${activeTab === "cash_on_approvals" ? "text-[#EF8020]" : "text-zinc-400 dark:text-zinc-500"}`} />
+              <span>Approvals</span>
+            </div>
+            {orders.filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.cashOnRulesApproved).length > 0 && (
+              <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {orders.filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.cashOnRulesApproved).length}
               </span>
             )}
           </button>
@@ -2231,14 +2252,80 @@ const SellerDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+            {/* --- CASH ON RULES APPROVALS TAB --- */}
+            {activeTab === "cash_on_approvals" && !selectedOrderId && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-[17px] font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                      <Truck className="w-5 h-5 text-amber-500" /> Cash on Rules Approvals
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      কাস্টমারের অর্ডার এপ্রুভ করুন এবং অফিশিয়াল গেটওয়ে লিংক (bKash/Nagad) দিন।
+                    </p>
+                  </div>
+                  <span className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold px-3 py-1 rounded-full">
+                    {orders.filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.cashOnRulesApproved).length} Pending
+                  </span>
+                </div>
+
+                {orders.filter((o: any) => o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")).length === 0 ? (
+                  <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-12 text-center border border-zinc-100 dark:border-zinc-800 space-y-3">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mx-auto">
+                      <CheckCircle className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm">No Cash on Rules Orders Yet</h3>
+                    <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                      যখন কাস্টমার Cash on Delivery with Rules সিলেক্ট করবে, তখন অর্ডারটি এখানে দেখাবে এবং আপনি সেটিতে bKash/Nagad গেটওয়ে লিংক দিয়ে পেমেন্ট এপ্রুভ করতে পারবেন।
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders
+                      .filter((o: any) => o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules"))
+                      .map((order: any) => (
+                        <div key={order.id} className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                            <div>
+                              <span className="text-[10px] text-zinc-400 font-mono">#{order.id.slice(0, 8)}</span>
+                              <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">{order.shippingAddress?.fullName || order.customerName || "Customer"}</h4>
+                              <p className="text-xs text-zinc-500 font-mono">{order.shippingAddress?.phone || order.phone || "No Phone"}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">৳{order.total || 0}</span>
+                              <p className="text-[10px] text-zinc-400">{formatDate(order.createdAt)}</p>
+                            </div>
+                          </div>
+
+                          {/* Order Items */}
+                          {order.items && order.items.length > 0 && (
+                            <div className="space-y-1 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/40 p-2.5 rounded-xl">
+                              {order.items.map((it: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-[11px]">
+                                  <span className="font-medium truncate max-w-[200px]">{it.name}</span>
+                                  <span className="font-mono">x{it.quantity} (৳{it.price})</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Approval Card Component */}
+                          <CashOnRulesApprovalCard order={order} notify={notify} />
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 dark:border-zinc-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50 px-2 sm:px-6 py-2 pb-safe flex justify-between items-center">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.03)] z-50 px-1 sm:px-4 py-1.5 pb-safe flex justify-between items-center overflow-x-auto no-scrollbar">
         <NavItem icon="home" label="Home" tab="home" />
         <NavItem icon="receipt" label="Orders" tab="orders" badge={orders.filter((o: any) => o.status === "pending").length} />
+        <NavItem icon="check-circle" label="Approvals" tab="cash_on_approvals" badge={orders.filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.cashOnRulesApproved).length || undefined} />
         <NavItem icon="boxes" label="Products" tab="products" />
         {sellerProfile?.canUseCourierShipping && <NavItem icon="truck" label="Due" tab="courier_dues" badge={orders.filter((o: any) => o.courierPaymentStatus === 'checking').length > 0 ? orders.filter((o: any) => o.courierPaymentStatus === 'checking').length : undefined} />}
         <NavItem icon="wallet" label="Custom Pay" tab="custom_payments" badge={customPayments.filter((p: any) => p.status === "pending").length} />
