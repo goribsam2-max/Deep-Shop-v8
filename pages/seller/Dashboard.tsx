@@ -109,44 +109,50 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
     }
   };
 
-  const handleReject = async () => {
-    const isConfirmed = await confirm(
-      "Reject Approval Request",
-      "Are you sure you want to reject this approval request? The order status will be set to Cancelled."
-    );
-    if (!isConfirmed) return;
-    setIsRejecting(true);
-    try {
-      await updateDoc(doc(db, "orders", order.id), {
-        cashOnRulesApproved: false,
-        status: OrderStatus.CANCELLED,
-        rejectReason: "Seller rejected Cash on Rules approval request.",
-      });
-      notify("Approval request rejected and order cancelled.", "info");
-    } catch (err) {
-      console.error("Failed to reject approval:", err);
-      notify("Failed to reject approval request", "error");
-    } finally {
-      setIsRejecting(false);
-    }
+  const handleReject = () => {
+    confirm({
+      title: "Reject Approval Request",
+      message: "Are you sure you want to reject this approval request? The order status will be set to Cancelled.",
+      confirmText: "Reject Request",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setIsRejecting(true);
+        try {
+          await updateDoc(doc(db, "orders", order.id), {
+            cashOnRulesApproved: false,
+            status: OrderStatus.CANCELLED,
+            rejectReason: "Seller rejected Cash on Rules approval request.",
+          });
+          notify("Approval request rejected and order cancelled.", "info");
+        } catch (err) {
+          console.error("Failed to reject approval:", err);
+          notify("Failed to reject approval request", "error");
+        } finally {
+          setIsRejecting(false);
+        }
+      },
+    });
   };
 
-  const handleDelete = async () => {
-    const isConfirmed = await confirm(
-      "Delete Order permanently",
-      "This will permanently delete this order/approval request from the database. Are you sure?"
-    );
-    if (!isConfirmed) return;
-    setIsDeleting(true);
-    try {
-      await deleteDoc(doc(db, "orders", order.id));
-      notify("Order permanently deleted from database.", "success");
-    } catch (err) {
-      console.error("Failed to delete order:", err);
-      notify("Failed to delete order from database.", "error");
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDelete = () => {
+    confirm({
+      title: "Delete Order Permanently",
+      message: "This will permanently delete this order/approval request from the database. Are you sure?",
+      confirmText: "Delete Permanently",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setIsDeleting(true);
+        try {
+          await deleteDoc(doc(db, "orders", order.id));
+          notify("Order permanently deleted from database.", "success");
+        } catch (err) {
+          console.error("Failed to delete order:", err);
+          notify("Failed to delete order from database.", "error");
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
   };
 
   return (
