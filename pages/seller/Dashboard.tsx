@@ -78,6 +78,9 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
   const [gatewayType, setGatewayType] = useState<"bkash" | "nagad">(order.gatewayType || "bkash");
   const [gatewayUrl, setGatewayUrl] = useState<string>(order.gatewayUrl || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (order.gatewayType) setGatewayType(order.gatewayType);
@@ -106,6 +109,46 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
     }
   };
 
+  const handleReject = async () => {
+    const isConfirmed = await confirm(
+      "Reject Approval Request",
+      "Are you sure you want to reject this approval request? The order status will be set to Cancelled."
+    );
+    if (!isConfirmed) return;
+    setIsRejecting(true);
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        cashOnRulesApproved: false,
+        status: OrderStatus.CANCELLED,
+        rejectReason: "Seller rejected Cash on Rules approval request.",
+      });
+      notify("Approval request rejected and order cancelled.", "info");
+    } catch (err) {
+      console.error("Failed to reject approval:", err);
+      notify("Failed to reject approval request", "error");
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const isConfirmed = await confirm(
+      "Delete Order permanently",
+      "This will permanently delete this order/approval request from the database. Are you sure?"
+    );
+    if (!isConfirmed) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, "orders", order.id));
+      notify("Order permanently deleted from database.", "success");
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+      notify("Failed to delete order from database.", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-[#FFFDF5] dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 shadow-sm space-y-3 my-3">
       <div className="flex items-center justify-between gap-2">
@@ -122,15 +165,30 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
             </p>
           </div>
         </div>
-        {order.cashOnRulesApproved ? (
-          <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold shrink-0">
-            ✓ Approved
-          </span>
-        ) : (
-          <span className="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold shrink-0">
-            ⏳ Pending Approval
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {order.cashOnRulesApproved ? (
+            <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">
+              ✓ Approved
+            </span>
+          ) : order.status === OrderStatus.CANCELLED ? (
+            <span className="px-2.5 py-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30 rounded-full text-[10px] font-bold">
+              ✕ Rejected
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold">
+              ⏳ Pending
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title="Delete from Database"
+            className="p-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors border border-rose-200 dark:border-rose-800"
+          >
+            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2 pt-2 border-t border-amber-200 dark:border-amber-800/40">
@@ -175,18 +233,52 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
           />
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          <button
+            type="button"
+            onClick={handleApprove}
+            disabled={isSaving}
+            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                {order.cashOnRulesApproved ? "Update Link" : "Approve & Send Link"}
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleReject}
+            disabled={isRejecting}
+            className="h-10 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all"
+          >
+            {isRejecting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <X className="w-4 h-4" />
+                Reject Request
+              </>
+            )}
+          </button>
+        </div>
+
         <button
           type="button"
-          onClick={handleApprove}
-          disabled={isSaving}
-          className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all mt-1"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="w-full h-9 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all mt-1"
         >
-          {isSaving ? (
+          {isDeleting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <>
-              <Check className="w-4 h-4" />
-              {order.cashOnRulesApproved ? "Update Gateway Link & Save" : "Approve Payment & Send Gateway Link"}
+              <Trash2 className="w-3.5 h-3.5" />
+              Delete Order from Database
             </>
           )}
         </button>
