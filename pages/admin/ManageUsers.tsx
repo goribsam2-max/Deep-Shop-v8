@@ -239,6 +239,21 @@ const ManageUsers: React.FC = () => {
     }
   };
 
+  const updateCashOnRulesPermission = async (uid: string, canUseCashOnRules: boolean) => {
+    try {
+      await updateDoc(doc(db, "users", uid), { canUseCashOnRules });
+      if (detailModal.user && detailModal.user.uid === uid) {
+        setDetailModal({
+          ...detailModal,
+          user: { ...detailModal.user, canUseCashOnRules } as any
+        });
+      }
+      notify(`Cash on with rules access ${canUseCashOnRules ? 'granted' : 'revoked'}`, "success");
+    } catch (e) {
+      notify("Failed to update permission", "error");
+    }
+  };
+
   const updateCustomRating = async (uid: string, ratingVal: number) => {
     try {
       // Keep rating between 0 and 5
@@ -964,6 +979,24 @@ const ManageUsers: React.FC = () => {
                       className={`px-4 py-2 text-white rounded-xl text-xs font-bold transition-all ${detailModal.user.canUseCourierShipping ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
                     >
                       {detailModal.user.canUseCourierShipping ? "Disable Courier" : "Enable Courier"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Cash On With Rules Permission */}
+                <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-t border-zinc-200 dark:border-zinc-800 pt-6 mt-6">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-500">Cash On With Rules Access</p>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">
+                      {detailModal.user.canUseCashOnRules ? "Enabled" : "Disabled"}
+                    </p>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => updateCashOnRulesPermission(detailModal.user!.uid, !detailModal.user.canUseCashOnRules)}
+                      className={`px-4 py-2 text-white rounded-xl text-xs font-bold transition-all ${detailModal.user.canUseCashOnRules ? 'bg-red-500 hover:bg-red-600' : 'bg-emerald-500 hover:bg-emerald-600'}`}
+                    >
+                      {detailModal.user.canUseCashOnRules ? "Disable Cash on Rules" : "Enable Cash on Rules"}
                     </button>
                   </div>
                 </div>

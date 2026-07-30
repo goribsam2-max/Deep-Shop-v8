@@ -7,7 +7,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useNotify } from "../components/Notifications";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, isForbiddenNumber } from "@/lib/utils";
 import { sendOrderToTelegram } from "../services/telegram";
 import { sendPushNotification } from "../lib/push";
 
@@ -61,6 +61,11 @@ const Payment: React.FC = () => {
   const handleSubmitPayment = async () => {
     if (!senderNumber.trim() || !trxId.trim()) {
       notify("Please enter Sender Number and Transaction ID", "error");
+      return;
+    }
+
+    if (isForbiddenNumber(senderNumber) || isForbiddenNumber(trxId)) {
+      notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
       return;
     }
 
@@ -224,11 +229,11 @@ const Payment: React.FC = () => {
                     <div>
                       <span className="text-[10px] font-bold text-[#E2125B] block">bKash (Send Money)</span>
                       <span className="font-bold text-zinc-900 dark:text-white">
-                        {sellerProfile?.bkashNumber || paymentSettings?.npsbNumber || "01778953114"}
+                        {sellerProfile?.bkashNumber || paymentSettings?.bkashNumber || paymentSettings?.npsbNumber || ""}
                       </span>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => {
-                      navigator.clipboard.writeText(sellerProfile?.bkashNumber || paymentSettings?.npsbNumber || "01778953114");
+                      navigator.clipboard.writeText(sellerProfile?.bkashNumber || paymentSettings?.bkashNumber || paymentSettings?.npsbNumber || "");
                       notify("bKash number copied!", "success");
                     }}>
                       <Copy className="w-4 h-4" />
@@ -238,11 +243,11 @@ const Payment: React.FC = () => {
                     <div>
                       <span className="text-[10px] font-bold text-[#F57C20] block">Nagad (Send Money)</span>
                       <span className="font-bold text-zinc-900 dark:text-white">
-                        {sellerProfile?.nagadNumber || paymentSettings?.pathaoPayNumber || "01778953114"}
+                        {sellerProfile?.nagadNumber || paymentSettings?.nagadNumber || paymentSettings?.pathaoPayNumber || ""}
                       </span>
                     </div>
                     <Button size="sm" variant="ghost" onClick={() => {
-                      navigator.clipboard.writeText(sellerProfile?.nagadNumber || paymentSettings?.pathaoPayNumber || "01778953114");
+                      navigator.clipboard.writeText(sellerProfile?.nagadNumber || paymentSettings?.nagadNumber || paymentSettings?.pathaoPayNumber || "");
                       notify("Nagad number copied!", "success");
                     }}>
                       <Copy className="w-4 h-4" />

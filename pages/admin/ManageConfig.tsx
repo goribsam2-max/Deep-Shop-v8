@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useNotify } from "../../components/Notifications";
+import { isForbiddenNumber } from "../../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Icon from "../../components/Icon";
 
@@ -32,9 +33,9 @@ const ManageConfig: React.FC = () => {
     mysteryBoxActive: true,
     storeNotice: "",
     dealEndTime: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-    bkashNumber: "01778953114",
+    bkashNumber: "",
     bkashIcon: "https://i.ibb.co.com/8m5LntYV/b-Kash-app-logo.png",
-    nagadNumber: "01778953114",
+    nagadNumber: "",
     nagadIcon: "https://i.ibb.co.com/RkG7cbs0/Nagad-Logo-wine.png",
     bankName: "Example Bank Ltd.",
     bankAccountName: "Deep Shop",
@@ -101,6 +102,18 @@ const ManageConfig: React.FC = () => {
   }, []);
 
   const handleSave = async () => {
+    if (
+      isForbiddenNumber(configs.bkashNumber) ||
+      isForbiddenNumber(configs.nagadNumber) ||
+      isForbiddenNumber((configs as any).npsbNumber) ||
+      isForbiddenNumber((configs as any).pathaoPayNumber) ||
+      isForbiddenNumber(configs.customerHotline) ||
+      isForbiddenNumber(configs.whatsappNumber)
+    ) {
+      notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
+      return;
+    }
+
     setSaving(true);
     try {
       await setDoc(doc(db, "settings", "platform"), configs);

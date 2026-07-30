@@ -465,9 +465,9 @@ export default function CheckoutPage() {
                                 <div className="flex items-center justify-between">
                                   <div>
                                     <div className="text-xs font-bold text-zinc-500">Send Money to</div>
-                                    <div className="text-lg font-bold">{(bankingMethod === 'bkash' ? settings?.bkashNumber : settings?.nagadNumber) || "01778953114"}</div>
+                                    <div className="text-lg font-bold">{(bankingMethod === 'bkash' ? settings?.bkashNumber : settings?.nagadNumber) || ""}</div>
                                   </div>
-                                  <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText((bankingMethod === 'bkash' ? settings?.bkashNumber : settings?.nagadNumber) || "01778953114")}>Copy</Button>
+                                  <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText((bankingMethod === 'bkash' ? settings?.bkashNumber : settings?.nagadNumber) || "")}>Copy</Button>
                                 </div>
                                 <div className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 p-3 rounded-xl text-xs font-bold leading-relaxed">
                                   Please Send Money exactly ৳{advanceType === "full" ? total : deliveryFee}. Then enter the details below to verify.

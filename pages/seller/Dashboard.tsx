@@ -18,7 +18,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { OrderStatus } from "../../types";
 import { uploadToImgbb } from "../../services/imgbb";
 import { useNotify, useConfirm } from "../../components/Notifications";
-import { formatPrice, cn } from "../../lib/utils";
+import { formatPrice, cn, isForbiddenNumber } from "../../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import Icon from "../../components/Icon";
 import {
@@ -74,6 +74,127 @@ const CHART_TIME_FILTERS = [
   { value: "all", label: "All Time" }
 ];
 
+function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any }) {
+  const [gatewayType, setGatewayType] = useState<"bkash" | "nagad">(order.gatewayType || "bkash");
+  const [gatewayUrl, setGatewayUrl] = useState<string>(order.gatewayUrl || "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (order.gatewayType) setGatewayType(order.gatewayType);
+    if (order.gatewayUrl) setGatewayUrl(order.gatewayUrl);
+  }, [order.id, order.gatewayType, order.gatewayUrl]);
+
+  const handleApprove = async () => {
+    if (!gatewayUrl.trim()) {
+      notify("Please enter a valid Payment Gateway URL link", "error");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateDoc(doc(db, "orders", order.id), {
+        cashOnRulesApproved: true,
+        gatewayType: gatewayType,
+        gatewayUrl: gatewayUrl.trim(),
+        status: OrderStatus.APPROVED,
+      });
+      notify(`Order payment approved for ${gatewayType.toUpperCase()}! Gateway link saved.`, "success");
+    } catch (err) {
+      console.error("Failed to approve order payment:", err);
+      notify("Failed to approve payment", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-[#FFFDF5] dark:bg-amber-950/20 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl p-4 shadow-sm space-y-3 my-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="p-2 bg-amber-500 text-white rounded-xl shadow-sm shrink-0">
+            <Truck className="w-4 h-4" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-amber-900 dark:text-amber-100">
+              Cash on Rules Payment Approval
+            </h4>
+            <p className="text-[10px] text-amber-700 dark:text-amber-300 font-medium">
+              পেমেন্ট এপ্রুভ করুন এবং কাস্টমারের জন্য bKash বা Nagad গেটওয়ে লিংক দিন।
+            </p>
+          </div>
+        </div>
+        {order.cashOnRulesApproved ? (
+          <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold shrink-0">
+            ✓ Approved
+          </span>
+        ) : (
+          <span className="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 rounded-full text-[10px] font-bold shrink-0">
+            ⏳ Pending Approval
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-2 pt-2 border-t border-amber-200 dark:border-amber-800/40">
+        <Label className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 block">
+          ১. গেটওয়ে নির্বাচন করুন (Select Gateway):
+        </Label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setGatewayType("bkash")}
+            className={`p-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+              gatewayType === "bkash"
+                ? "border-pink-500 bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 shadow-sm"
+                : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400"
+            }`}
+          >
+            <span>bKash Gateway</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setGatewayType("nagad")}
+            className={`p-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+              gatewayType === "nagad"
+                ? "border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 shadow-sm"
+                : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400"
+            }`}
+          >
+            <span>Nagad Gateway</span>
+          </button>
+        </div>
+
+        <div className="space-y-1 pt-1">
+          <Label className="text-[11px] font-bold text-zinc-800 dark:text-zinc-200 block">
+            ২. {gatewayType === "bkash" ? "bKash" : "Nagad"} অফিশিয়াল গেটওয়ে লিংক (Payment Gateway Link):
+          </Label>
+          <Input
+            value={gatewayUrl}
+            onChange={(e) => setGatewayUrl(e.target.value)}
+            placeholder={`https://payment.${gatewayType === 'bkash' ? 'bkash' : 'nagad'}.com/pay/...`}
+            className="rounded-xl bg-white dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 h-10 text-xs font-mono text-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleApprove}
+          disabled={isSaving}
+          className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all mt-1"
+        >
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Check className="w-4 h-4" />
+              {order.cashOnRulesApproved ? "Update Gateway Link & Save" : "Approve Payment & Send Gateway Link"}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const SellerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const notify = useNotify();
@@ -92,6 +213,8 @@ const SellerDashboard: React.FC = () => {
   const [tiktokId, setTiktokId] = useState("");
   const [bkashNumber, setBkashNumber] = useState("");
   const [nagadNumber, setNagadNumber] = useState("");
+  const [cashOnRulesActive, setCashOnRulesActive] = useState(false);
+  const [cashOnRulesVoiceUrl, setCashOnRulesVoiceUrl] = useState("");
   const [coupons, setCoupons] = useState<any[]>([]);
   const [newCouponCode, setNewCouponCode] = useState("");
   const [newCouponDiscount, setNewCouponDiscount] = useState("");
@@ -189,6 +312,8 @@ const SellerDashboard: React.FC = () => {
             if (parsed.tiktokId) setTiktokId(parsed.tiktokId);
             if (parsed.bkashNumber) setBkashNumber(parsed.bkashNumber);
             if (parsed.nagadNumber) setNagadNumber(parsed.nagadNumber);
+            if (parsed.cashOnRulesActive !== undefined) setCashOnRulesActive(parsed.cashOnRulesActive);
+            if (parsed.cashOnRulesVoiceUrl !== undefined) setCashOnRulesVoiceUrl(parsed.cashOnRulesVoiceUrl);
             if (parsed.defaultAdvanceAmount !== undefined) setDefaultAdvanceAmount(parsed.defaultAdvanceAmount);
             if (parsed.taxRate !== undefined) setTaxRate(parsed.taxRate);
             if (parsed.binNumber !== undefined) setBinNumber(parsed.binNumber);
@@ -235,6 +360,8 @@ const SellerDashboard: React.FC = () => {
       if (sellerProfile.tiktokId) setTiktokId(sellerProfile.tiktokId);
       if (sellerProfile.bkashNumber) setBkashNumber(sellerProfile.bkashNumber);
       if (sellerProfile.nagadNumber) setNagadNumber(sellerProfile.nagadNumber);
+      if (sellerProfile.cashOnRulesActive !== undefined) setCashOnRulesActive(!!sellerProfile.cashOnRulesActive);
+      if (sellerProfile.cashOnRulesVoiceUrl !== undefined) setCashOnRulesVoiceUrl(sellerProfile.cashOnRulesVoiceUrl || "");
       if (sellerProfile.defaultAdvanceAmount !== undefined) setDefaultAdvanceAmount(sellerProfile.defaultAdvanceAmount);
       if (sellerProfile.taxRate !== undefined) setTaxRate(sellerProfile.taxRate);
       if (sellerProfile.binNumber !== undefined) setBinNumber(sellerProfile.binNumber);
@@ -246,6 +373,10 @@ const SellerDashboard: React.FC = () => {
   // Firestore Write Operations
   const saveStoreSettings = async () => {
     if (!user) return;
+    if (isForbiddenNumber(bkashNumber) || isForbiddenNumber(nagadNumber)) {
+      notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
+      return;
+    }
     setIsSavingSettings(true);
     const updateData = {
       shopName: shopName,
@@ -254,6 +385,8 @@ const SellerDashboard: React.FC = () => {
       tiktokId: tiktokId,
       bkashNumber: bkashNumber,
       nagadNumber: nagadNumber,
+      cashOnRulesActive: cashOnRulesActive,
+      cashOnRulesVoiceUrl: cashOnRulesVoiceUrl,
       defaultAdvanceAmount: defaultAdvanceAmount === "" ? "" : Number(defaultAdvanceAmount),
       taxRate: Number(taxRate),
       binNumber: binNumber,
@@ -1221,6 +1354,9 @@ const SellerDashboard: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Cash on Rules Payment Approval Card */}
+                    <CashOnRulesApprovalCard order={order} notify={notify} />
+
                     {/* Order Status Manager & Actions */}
                     <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
                       {/* Cancellation Reason Banner if Cancelled */}
@@ -1787,6 +1923,47 @@ const SellerDashboard: React.FC = () => {
                           <Label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 ml-1 mb-1.5 block">Nagad Number</Label>
                           <Input value={nagadNumber} onChange={e => setNagadNumber(e.target.value)} placeholder="+880..." className="rounded-xl bg-[#F5F5F7] dark:bg-zinc-800 border-transparent dark:border-zinc-700 h-12 text-zinc-900 dark:text-zinc-100 dark:text-zinc-100" />
                        </div>
+
+                       {/* Cash On Delivery With Rules Settings */}
+                       {(sellerProfile?.canUseCashOnRules || sellerProfile?.role === "admin") && (
+                          <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                             <div className="flex items-center justify-between">
+                                <div>
+                                   <Label className="text-xs font-bold text-zinc-900 dark:text-zinc-100 block">
+                                      Cash On Delivery with Rules
+                                   </Label>
+                                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                      Enable custom voice instructions & direct messaging checkout.
+                                   </p>
+                                </div>
+                                <input
+                                   type="checkbox"
+                                   checked={cashOnRulesActive}
+                                   onChange={(e) => setCashOnRulesActive(e.target.checked)}
+                                   className="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
+                                />
+                             </div>
+
+                             {cashOnRulesActive && (
+                                <div className="space-y-4 pt-1 animate-in fade-in duration-300">
+                                   <div className="space-y-1.5">
+                                      <Label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block">
+                                         Voice MP3 URL (GitHub or Direct MP3 Link)
+                                      </Label>
+                                      <Input
+                                         value={cashOnRulesVoiceUrl}
+                                         onChange={(e) => setCashOnRulesVoiceUrl(e.target.value)}
+                                         placeholder="https://raw.githubusercontent.com/user/repo/main/voice.mp3"
+                                         className="rounded-xl bg-[#F5F5F7] dark:bg-zinc-800 border-transparent dark:border-zinc-700 h-12 text-xs font-mono text-zinc-900 dark:text-zinc-100"
+                                      />
+                                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                         Provide a GitHub raw MP3 link or direct MP3 URL to play during buyer checkout. Note: Payment Gateway links (bKash/Nagad) are provided directly when approving individual orders.
+                                      </p>
+                                   </div>
+                                </div>
+                             )}
+                          </div>
+                       )}
                     </div>
 
                     <Button onClick={saveStoreSettings} disabled={isSavingSettings} className="w-full h-14 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-bold text-[15px] shadow-sm mt-4">

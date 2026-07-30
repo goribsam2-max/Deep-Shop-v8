@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { collection, addDoc, getDoc, doc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { useNotify } from "../components/Notifications";
+import { isForbiddenNumber } from "../lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Copy, QrCode, Smartphone } from "lucide-react";
 import { sendDepositRequestToTelegram } from "../services/telegram";
@@ -64,6 +65,11 @@ const Deposit: React.FC = () => {
     e.preventDefault();
     if (!amount || (!trxId && !isForeign)) return notify("Please fill all required fields", "error");
     if (!isForeign && !senderNumber) return notify("Please enter the sender number", "error");
+
+    if (isForbiddenNumber(senderNumber) || isForbiddenNumber(trxId)) {
+      notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
+      return;
+    }
     
     setLoading(true);
     try {
@@ -143,13 +149,13 @@ const Deposit: React.FC = () => {
                   <div className="flex justify-between items-center bg-white dark:bg-zinc-800 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
                     <div>
                       <span className="text-[10px] font-bold text-red-500 block">bKash (Send Money)</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{paymentSettings?.npsbNumber || "01778953114"}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">{paymentSettings?.npsbNumber || paymentSettings?.bkashNumber || ""}</span>
                     </div>
                     <button 
                       type="button"
                       className="flex items-center text-xs h-8 px-2 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition" 
                       onClick={() => {
-                        navigator.clipboard.writeText(paymentSettings?.npsbNumber || "01778953114");
+                        navigator.clipboard.writeText(paymentSettings?.npsbNumber || paymentSettings?.bkashNumber || "");
                       }}
                     >
                       <Copy className="h-4 w-4" />
@@ -158,13 +164,13 @@ const Deposit: React.FC = () => {
                   <div className="flex justify-between items-center bg-white dark:bg-zinc-800 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700">
                     <div>
                       <span className="text-[10px] font-bold text-orange-500 block">Nagad (Send Money)</span>
-                      <span className="font-bold text-zinc-900 dark:text-white">{paymentSettings?.pathaoPayNumber || "01778953114"}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">{paymentSettings?.pathaoPayNumber || paymentSettings?.nagadNumber || ""}</span>
                     </div>
                     <button 
                       type="button"
                       className="flex items-center text-xs h-8 px-2 rounded-md hover:bg-zinc-200 dark:hover:bg-zinc-700 transition" 
                       onClick={() => {
-                        navigator.clipboard.writeText(paymentSettings?.pathaoPayNumber || "01778953114");
+                        navigator.clipboard.writeText(paymentSettings?.pathaoPayNumber || paymentSettings?.nagadNumber || "");
                       }}
                     >
                       <Copy className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, isForbiddenNumber } from "@/lib/utils";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
@@ -19,6 +19,7 @@ import { getProductCoinReward } from "../lib/coinRewards";
 import { CustomSectionEmbed } from "../components/CustomSectionEmbed";
 import { useTheme } from "../components/ThemeContext";
 import { useLanguage } from "../components/LanguageContext";
+import VoiceMessageBubble from "../components/ui/voice-message-bubble";
 
 import { Button } from "../components/ui/button";
 import {
@@ -259,11 +260,37 @@ export default function CheckoutPage() {
   }, [navigate]);
 
   const [hasFullAdvanceProduct, setHasFullAdvanceProduct] = useState(false);
+  const [cashOnRulesSellerInfo, setCashOnRulesSellerInfo] = useState<{
+    active: boolean;
+    voiceUrl: string;
+    bkash?: string;
+    nagad?: string;
+    approved?: boolean;
+    bkashGatewayUrl?: string;
+    nagadGatewayUrl?: string;
+  } | null>(null);
+  const [selectedGateway, setSelectedGateway] = useState<"bkash" | "nagad">("bkash");
+  const [hasVoiceEnded, setHasVoiceEnded] = useState(false);
 
   useEffect(() => {
     const resolveAdvance = async () => {
       let totalAdvance = 0;
       let fullAdvanceFound = false;
+      let hasCashOnRules = false;
+      let cashOnRulesVoice = "";
+      let cashOnRulesBkash = "";
+      let cashOnRulesNagad = "";
+      let cashOnRulesApproved = settings?.cashOnRulesApproved ?? paymentSettings?.cashOnRulesApproved ?? false;
+      let bkashGatewayUrl = settings?.cashOnRulesBkashGatewayUrl || paymentSettings?.cashOnRulesBkashGatewayUrl || "";
+      let nagadGatewayUrl = settings?.cashOnRulesNagadGatewayUrl || paymentSettings?.cashOnRulesNagadGatewayUrl || "";
+
+      if (settings?.cashOnRulesActive || paymentSettings?.cashOnRulesActive) {
+        hasCashOnRules = true;
+        cashOnRulesVoice = settings?.cashOnRulesVoiceUrl || paymentSettings?.cashOnRulesVoiceUrl || "";
+        cashOnRulesBkash = settings?.bkashNumber || paymentSettings?.bkashNumber || "";
+        cashOnRulesNagad = settings?.nagadNumber || paymentSettings?.nagadNumber || "";
+      }
+
       try {
         const { getDoc, doc } = await import("firebase/firestore");
         for (const item of items) {
@@ -271,6 +298,26 @@ export default function CheckoutPage() {
           
           const prodSnap = await getDoc(doc(db, "products", item.id));
           const pData = prodSnap.exists() ? prodSnap.data() : (item as any);
+
+          const targetSellerId = item.sellerId || pData?.sellerId;
+          if (targetSellerId) {
+            const sellerSnap = await getDoc(doc(db, "users", targetSellerId));
+            if (sellerSnap.exists()) {
+              const sData = sellerSnap.data();
+              if (sData.cashOnRulesActive) {
+                hasCashOnRules = true;
+                if (sData.cashOnRulesVoiceUrl) cashOnRulesVoice = sData.cashOnRulesVoiceUrl;
+                if (sData.bkashNumber) cashOnRulesBkash = sData.bkashNumber;
+                if (sData.nagadNumber) cashOnRulesNagad = sData.nagadNumber;
+                if (sData.cashOnRulesApproved !== undefined) cashOnRulesApproved = !!sData.cashOnRulesApproved;
+                if (sData.cashOnRulesBkashGatewayUrl) bkashGatewayUrl = sData.cashOnRulesBkashGatewayUrl;
+                if (sData.cashOnRulesNagadGatewayUrl) nagadGatewayUrl = sData.cashOnRulesNagadGatewayUrl;
+              }
+              if (sData.bkashNumber || sData.nagadNumber) {
+                setSellerPaymentNumbers({ bkash: sData.bkashNumber || "", nagad: sData.nagadNumber || "" });
+              }
+            }
+          }
 
           if (pData?.advanceType === "full" || (item as any)?.advanceType === "full") {
             fullAdvanceFound = true;
@@ -305,9 +352,23 @@ export default function CheckoutPage() {
           
           totalAdvance += itemAdvance * (item.quantity || 1);
         }
+
+        if (hasCashOnRules) {
+          setCashOnRulesSellerInfo({
+            active: true,
+            voiceUrl: cashOnRulesVoice,
+            bkash: cashOnRulesBkash,
+            nagad: cashOnRulesNagad,
+            approved: cashOnRulesApproved,
+            bkashGatewayUrl: bkashGatewayUrl,
+            nagadGatewayUrl: nagadGatewayUrl,
+          });
+          setPaymentType("cash_on_rules");
+        }
+
         setResolvedAdvanceAmount(totalAdvance);
         setHasFullAdvanceProduct(fullAdvanceFound);
-        if (fullAdvanceFound) {
+        if (fullAdvanceFound && !hasCashOnRules) {
           setPaymentType("advance");
           setAdvanceType("full");
         }
@@ -335,6 +396,9 @@ export default function CheckoutPage() {
   const handleSaveAddress = async () => {
     if (!newAddress.name || !newAddress.phone || !newAddress.address) {
       return notify("Please complete all required fields.", "error");
+    }
+    if (isForbiddenNumber(newAddress.phone)) {
+      return notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
     }
     const newAddrObj = {
       id: Math.random().toString(36).substring(7),
@@ -441,6 +505,10 @@ export default function CheckoutPage() {
     );
     if (!activeAddress) return notify("Address required", "error");
 
+    if (isForbiddenNumber(activeAddress.phone) || isForbiddenNumber(senderNumber) || isForbiddenNumber(trxId)) {
+      return notify("01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed)", "error");
+    }
+
     if (paymentType === "vgcoin") {
       const coinCost = advanceType === "full" ? total : (resolvedAdvanceAmount ?? deliveryFee);
       if (userCoins < coinCost) {
@@ -456,7 +524,11 @@ export default function CheckoutPage() {
       let paymentOptStr = "N/A";
       let trxStr = "";
 
-      if (paymentType === "advance") {
+      if (paymentType === "cash_on_rules") {
+        paymentStr = `Cash on Delivery with Rules (${selectedGateway === "bkash" ? "bKash Gateway" : "Nagad Gateway"})`;
+        paymentOptStr = "Paid ৳150 Delivery Fee via Gateway";
+        trxStr = `COR_${selectedGateway.toUpperCase()}_${Date.now()}`;
+      } else if (paymentType === "advance") {
         paymentStr =
           bankingMethod === "bangla_qr"
             ? "bKash or Nagad"
@@ -503,9 +575,23 @@ export default function CheckoutPage() {
         isGift: isGift,
         giftNote: isGift ? giftNote : null,
         affiliateRef: affiliateRef || null,
+        gatewayUsed: paymentType === "cash_on_rules" ? selectedGateway : null,
       };
 
       const docRef = await addDoc(collection(db, "orders"), orderData);
+
+      if (paymentType === "cash_on_rules" && cashOnRulesSellerInfo?.approved) {
+        const gUrl = selectedGateway === "bkash"
+          ? cashOnRulesSellerInfo?.bkashGatewayUrl
+          : cashOnRulesSellerInfo?.nagadGatewayUrl;
+        if (gUrl) {
+          try {
+            window.open(gUrl, "_blank");
+          } catch (e) {
+            console.error("Gateway open error:", e);
+          }
+        }
+      }
 
       // Notify sellers of the new order ONLY for non-advance (or COD/VG Coin) orders immediately
       if (paymentType !== "advance") {
@@ -653,6 +739,7 @@ export default function CheckoutPage() {
   const validateStep = (step: number) => {
     if (step === 1) return !!selectedAddressId;
     if (step === 2) {
+      if (paymentType === "cash_on_rules") return true;
       if (paymentType === "cod") return true;
       if (paymentType === "advance") {
         return !!advanceType;
@@ -869,7 +956,131 @@ export default function CheckoutPage() {
                   </h2>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {cashOnRulesSellerInfo?.active ? (
+                    <div className="space-y-6">
+                      {/* Pill Shape Button */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentType("cash_on_rules")}
+                        className={cn(
+                          "w-full flex items-center justify-between gap-2 px-4 sm:px-8 py-3.5 sm:py-4 border-2 rounded-full transition-all duration-300 font-bold text-sm sm:text-base shadow-sm my-1 overflow-x-auto",
+                          paymentType === "cash_on_rules"
+                            ? "border-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-100 ring-2 ring-amber-500/20"
+                            : "border-zinc-200 dark:border-zinc-800 hover:border-amber-300 text-zinc-700 dark:text-zinc-300"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+                          <div className="p-1.5 sm:p-2 bg-amber-500 text-white rounded-full shadow-sm shrink-0">
+                            <Truck className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </div>
+                          <span className="text-sm sm:text-base font-bold whitespace-nowrap">Cash on with rules</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {cashOnRulesSellerInfo?.approved ? (
+                            <span className="text-[10px] sm:text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2.5 sm:px-3 py-1 rounded-full font-bold flex items-center gap-1 whitespace-nowrap">
+                              ✓ Approved for Payment
+                            </span>
+                          ) : (
+                            <span className="text-[10px] sm:text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 sm:px-3 py-1 rounded-full font-bold flex items-center gap-1 whitespace-nowrap">
+                              ⏳ Approval Needed
+                            </span>
+                          )}
+                        </div>
+                      </button>
+
+                      {/* Content when Cash on with rules is selected */}
+                      {paymentType === "cash_on_rules" && (
+                        <div className="space-y-5 bg-zinc-50 dark:bg-zinc-900/90 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 animate-in fade-in duration-300">
+                          {/* Voice Message Bubble */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2.5 py-1 rounded-full">
+                                🔊 ভয়েস মেসেজ শুনুন
+                              </span>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                                অডিও প্লে করুন
+                              </span>
+                            </div>
+
+                            <VoiceMessageBubble
+                              audioSrc={cashOnRulesSellerInfo.voiceUrl}
+                              duration={20}
+                              isMe={false}
+                              className="w-full max-w-md shadow-md border border-zinc-200 dark:border-zinc-700"
+                              onEnded={() => setHasVoiceEnded(true)}
+                            />
+                          </div>
+
+                          {/* Instruction text & links */}
+                          <div className="space-y-4 pt-2">
+                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/40 dark:to-zinc-900 border-2 border-amber-300/60 dark:border-amber-700/40 p-4 rounded-2xl space-y-3 font-['Hind_Siliguri',sans-serif] text-zinc-800 dark:text-zinc-200">
+                              <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-400 text-base">
+                                <Shield className="w-5 h-5 text-amber-600 shrink-0" />
+                                <span>অর্ডার কনফার্ম করার নিয়মাবলি</span>
+                              </div>
+
+                              <p className="text-sm leading-relaxed font-medium">
+                                আপনার অর্ডার করার জন্য বিকাশ বা নগদে ফোনের দাম (<span className="font-bold text-indigo-600 dark:text-indigo-400">৳{subtotal}</span>) এবং ডেলিভারি চার্জ (<span className="font-bold text-amber-600 dark:text-amber-400">৳150</span>) ডিপোজিট করে রাখুন।
+                              </p>
+
+                              <div className="bg-white/90 dark:bg-zinc-800/90 p-3 rounded-xl border border-amber-200 dark:border-zinc-700 text-xs font-medium space-y-1">
+                                <p className="text-zinc-900 dark:text-zinc-100 font-bold">
+                                  💡 অফিশিয়াল পেমেন্ট গেটওয়ের মাধ্যমে আপনার থেকে মাত্র ৳১৫০ ডেলিভারি চার্জ নেওয়া হবে।
+                                </p>
+                                <p className="text-zinc-600 dark:text-zinc-300">
+                                  ডিপোজিট সম্পন্ন করে স্ক্রিন রেকর্ড করে মেসেজে Telegram বা WhatsApp-এ পাঠালে আপনার অর্ডারটি ফাইনাল কনফার্ম হবে।
+                                </p>
+                              </div>
+
+                              {(cashOnRulesSellerInfo.bkash || cashOnRulesSellerInfo.nagad || sellerPaymentNumbers) && (
+                                <div className="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+                                  {(cashOnRulesSellerInfo.bkash || sellerPaymentNumbers?.bkash) && (
+                                    <div className="bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 px-3 py-1.5 rounded-lg border border-pink-300/50 font-bold">
+                                      bKash: {cashOnRulesSellerInfo.bkash || sellerPaymentNumbers?.bkash}
+                                    </div>
+                                  )}
+                                  {(cashOnRulesSellerInfo.nagad || sellerPaymentNumbers?.nagad) && (
+                                    <div className="bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 px-3 py-1.5 rounded-lg border border-orange-300/50 font-bold">
+                                      Nagad: {cashOnRulesSellerInfo.nagad || sellerPaymentNumbers?.nagad}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Direct Message Action Buttons */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                              <a
+                                href="https://t.me/deepshopback"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2.5 bg-[#229ED9] hover:bg-[#1f8fbd] text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95"
+                              >
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .54-1.43.53-.47-.01-1.37-.27-2.04-.49-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.99-3.02 8.39-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.42 0 .06.01.19 0 .28z"/>
+                                </svg>
+                                Message in Telegram
+                              </a>
+
+                              <a
+                                href="https://wa.me/17247648185"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95"
+                              >
+                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                                </svg>
+                                Message in WhatsApp
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {!isForeign && (
                       <button
                         disabled={isGift || isCodDisabledBySellers || hasFullAdvanceProduct}
@@ -1129,6 +1340,8 @@ export default function CheckoutPage() {
 
                     </div>
                   )}
+                  </>
+                  )}
                 </CardContent>
                 <CardFooter className="flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-4 pb-2">
                   <Button
@@ -1191,12 +1404,52 @@ export default function CheckoutPage() {
                       <Label className="text-zinc-500">{t('Payment Details') || 'Payment Details'}</Label>
                       <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-sm font-medium">
                         <p className="font-bold text-zinc-900 dark:text-zinc-100">
-                          {paymentType === "cod"
-                            ? "Cash on Delivery"
-                            : paymentType === "vgcoin"
-                              ? `DP Coins (${advanceType})`
-                              : `bKash / Nagad Payment (${advanceType === "full" ? "Full Payment" : "Advance Booking"})`}
+                          {paymentType === "cash_on_rules"
+                            ? "Cash on Delivery with Rules (Approved Payment)"
+                            : paymentType === "cod"
+                              ? "Cash on Delivery"
+                              : paymentType === "vgcoin"
+                                ? `DP Coins (${advanceType})`
+                                : `bKash / Nagad Payment (${advanceType === "full" ? "Full Payment" : "Advance Booking"})`}
                         </p>
+
+                        {paymentType === "cash_on_rules" && (
+                          <div className="mt-3 space-y-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                            <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                              ডেলিভারি চার্জ ৳১৫০ পেমেন্ট করার জন্য গেটওয়ে বাছুন:
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedGateway("bkash")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1 transition-all",
+                                  selectedGateway === "bkash"
+                                    ? "border-pink-500 bg-pink-50 dark:bg-pink-950/40 text-pink-900 dark:text-pink-100 ring-2 ring-pink-500/20"
+                                    : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                                )}
+                              >
+                                <span>bKash Gateway</span>
+                                <span className="text-[10px] font-mono font-bold text-pink-600">Pay ৳150</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => setSelectedGateway("nagad")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 font-bold text-xs flex flex-col items-center justify-center gap-1 transition-all",
+                                  selectedGateway === "nagad"
+                                    ? "border-orange-500 bg-orange-50 dark:bg-orange-950/40 text-orange-900 dark:text-orange-100 ring-2 ring-orange-500/20"
+                                    : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                                )}
+                              >
+                                <span>Nagad Gateway</span>
+                                <span className="text-[10px] font-mono font-bold text-orange-600">Pay ৳150</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {paymentType === "advance" && (
                           <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold">
                             Payment details will be submitted on the next page.
@@ -1252,7 +1505,7 @@ export default function CheckoutPage() {
                     size="default"
                     className="bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-lg shadow-black/10 dark:shadow-white/10 text-white dark:text-zinc-900 border-0 text-xs sm:text-sm px-4 sm:px-6 flex-1 sm:flex-none"
                   >
-                    <Lock className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> {paymentType === 'advance' ? (t('Checkout & Pay') || 'Checkout & Pay') : (t('Place Order') || 'Complete Order')}
+                    <Lock className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> {paymentType === 'cash_on_rules' ? (cashOnRulesSellerInfo?.approved ? `Pay ৳150 via ${selectedGateway === 'bkash' ? 'bKash' : 'Nagad'} & Complete Order` : 'Complete Order (Submit for Approval)') : paymentType === 'advance' ? (t('Checkout & Pay') || 'Checkout & Pay') : (t('Place Order') || 'Complete Order')}
                   </Button>
                 </CardFooter>
               </Card>

@@ -74,10 +74,20 @@ function isGibberish(text: string): boolean {
   return false;
 }
 
+export function isForbiddenNumber(val: string | null | undefined): boolean {
+  if (!val) return false;
+  const clean = String(val).replace(/[\s\-\+\(\)]/g, "");
+  return clean.includes("01778953114") || clean.includes("1778953114") || clean.includes("8801778953114");
+}
+
 export function validateInput(val: string, type: 'email' | 'phone' | 'name' | 'password'): string | null {
   const ban = checkBanState();
   if (ban) return ban;
   
+  if (isForbiddenNumber(val)) {
+    return "01778953114 নম্বরটি সিস্টেমে অনুমোদিত নয়। (This number is not allowed on this platform)";
+  }
+
   const lowerVal = val.toLowerCase();
   
   // Universal profanity check

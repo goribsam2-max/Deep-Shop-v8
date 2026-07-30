@@ -389,6 +389,42 @@ const MyOrders: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Cash on Rules Gateway Banner */}
+                  {(order.paymentMethod?.includes("Rules") || order.paymentType === "cash_on_rules") && (
+                    order.cashOnRulesApproved && order.gatewayUrl ? (
+                      <div className="mb-4 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-emerald-900 dark:text-emerald-100 flex items-center gap-1.5">
+                            <Icon name="check-circle" className="w-4 h-4 text-emerald-600" />
+                            বিক্রেতা পেমেন্ট অনুমোদন করেছেন ({(order.gatewayType || "bKash").toUpperCase()})
+                          </span>
+                          <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-0.5 rounded-full">
+                            Approved
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-medium">
+                          ডেলিভারি চার্জ ৳১৫০ অফিশিয়াল গেটওয়ে দিয়ে পেমেন্ট করুন:
+                        </p>
+                        <a
+                          href={order.gatewayUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm text-center"
+                        >
+                          Pay ৳150 via {(order.gatewayType || "Gateway").toUpperCase()} →
+                        </a>
+                      </div>
+                    ) : (
+                      <div className="mb-4 p-3.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-2">
+                        <Icon name="clock" className="w-4 h-4 text-amber-600 shrink-0" />
+                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                          বিক্রেতার পেমেন্ট অনুমোদনের জন্য অপেক্ষারত... (Approval Pending)
+                        </p>
+                      </div>
+                    )
+                  )}
+
                   {order.status === OrderStatus.SHIPPED_IN_COURIER ? (
                     <div className="flex flex-col gap-3">
                       {order.courierName && order.riderNumber && order.courierPaymentStatus === 'completed' ? (
