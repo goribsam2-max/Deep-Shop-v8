@@ -48,7 +48,9 @@ import {
   ShoppingBag,
   Ticket,
   Copy,
-  QrCode
+  QrCode,
+  Volume2,
+  Headphones
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -268,6 +270,8 @@ export default function CheckoutPage() {
     approved?: boolean;
     bkashGatewayUrl?: string;
     nagadGatewayUrl?: string;
+    telegram?: string;
+    whatsapp?: string;
   } | null>(null);
   const [selectedGateway, setSelectedGateway] = useState<"bkash" | "nagad">("bkash");
   const [hasVoiceEnded, setHasVoiceEnded] = useState(false);
@@ -319,7 +323,7 @@ export default function CheckoutPage() {
       };
       const docRef = await addDoc(collection(db, "orders"), orderData);
       setPendingCashOnRulesOrderId(docRef.id);
-      notify("অর্ডারটি সেলার ড্যাশবোর্ডে অনুমোদনের জন্য জমা হয়েছে!", "success");
+      notify("অর্ডার কনফার্ম করার জন্য মেসেজ পাঠানো হচ্ছে...", "success");
       return docRef.id;
     } catch (err) {
       console.error("Failed to create pending order:", err);
@@ -359,6 +363,8 @@ export default function CheckoutPage() {
       let cashOnRulesApproved = settings?.cashOnRulesApproved ?? paymentSettings?.cashOnRulesApproved ?? false;
       let bkashGatewayUrl = settings?.cashOnRulesBkashGatewayUrl || paymentSettings?.cashOnRulesBkashGatewayUrl || "";
       let nagadGatewayUrl = settings?.cashOnRulesNagadGatewayUrl || paymentSettings?.cashOnRulesNagadGatewayUrl || "";
+      let cashOnRulesTelegram = settings?.telegram || "";
+      let cashOnRulesWhatsapp = settings?.whatsapp || "";
 
       if (settings?.cashOnRulesActive || paymentSettings?.cashOnRulesActive) {
         hasCashOnRules = true;
@@ -380,6 +386,8 @@ export default function CheckoutPage() {
             const sellerSnap = await getDoc(doc(db, "users", targetSellerId));
             if (sellerSnap.exists()) {
               const sData = sellerSnap.data();
+              if (sData.telegram) cashOnRulesTelegram = sData.telegram;
+              if (sData.whatsapp) cashOnRulesWhatsapp = sData.whatsapp;
               if (sData.cashOnRulesActive) {
                 hasCashOnRules = true;
                 if (sData.cashOnRulesVoiceUrl) cashOnRulesVoice = sData.cashOnRulesVoiceUrl;
@@ -438,6 +446,8 @@ export default function CheckoutPage() {
             approved: cashOnRulesApproved,
             bkashGatewayUrl: bkashGatewayUrl,
             nagadGatewayUrl: nagadGatewayUrl,
+            telegram: cashOnRulesTelegram,
+            whatsapp: cashOnRulesWhatsapp,
           });
           setPaymentType("cash_on_rules");
         }
@@ -667,9 +677,10 @@ export default function CheckoutPage() {
           shippingAddress: activeAddress.address,
           contactNumber: activeAddress.phone,
           altNumber: activeAddress.altPhone || "",
+          finalized: true, // mark as finalized so it appears in the regular orders list
         });
       } else {
-        const docRef = await addDoc(collection(db, "orders"), orderData);
+        const docRef = await addDoc(collection(db, "orders"), { ...orderData, finalized: true });
         finalDocId = docRef.id;
       }
 
@@ -828,7 +839,9 @@ export default function CheckoutPage() {
   const validateStep = (step: number) => {
     if (step === 1) return !!selectedAddressId;
     if (step === 2) {
-      if (paymentType === "cash_on_rules") return true;
+      if (paymentType === "cash_on_rules") {
+        return !!(cashOnRulesApprovedBySeller || cashOnRulesSellerInfo?.approved);
+      }
       if (paymentType === "cod") return true;
       if (paymentType === "advance") {
         return !!advanceType;
@@ -845,7 +858,8 @@ export default function CheckoutPage() {
   const nextStep = async () => {
     if (validateStep(currentStep)) {
       if (currentStep === 2 && paymentType === "cash_on_rules") {
-        await ensureCashOnRulesOrderCreated();
+        const orderId = await ensureCashOnRulesOrderCreated();
+        if (!orderId) return; // Stop if order creation failed
       }
       setCurrentStep((p) => Math.min(p + 1, 3));
     } else notify("Please complete the required fields.", "error");
@@ -1082,96 +1096,171 @@ export default function CheckoutPage() {
 
                       {/* Content when Cash on with rules is selected */}
                       {paymentType === "cash_on_rules" && (
-                        <div className="space-y-5 bg-zinc-50 dark:bg-zinc-900/90 p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 animate-in fade-in duration-300">
-                          {/* Voice Message Bubble */}
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/60 px-2.5 py-1 rounded-full">
-                                🔊 ভয়েস মেসেজ শুনুন
-                              </span>
-                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                অডিও প্লে করুন
+                        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm animate-in fade-in duration-500">
+                          
+                          {/* Header / Voice Section */}
+                          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 p-5 sm:p-6 border-b border-amber-100 dark:border-amber-900/30">
+                            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-sm">
+                                  <Volume2 className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">
+                                    Voice Instructions
+                                  </h3>
+                                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                    Please listen carefully before proceeding
+                                  </p>
+                                </div>
+                              </div>
+                              <span className="hidden sm:inline-flex px-3 py-1 bg-white dark:bg-zinc-800 text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 rounded-full shadow-sm border border-zinc-100 dark:border-zinc-700">
+                                Required Step
                               </span>
                             </div>
 
-                            <VoiceMessageBubble
-                              audioSrc={cashOnRulesSellerInfo.voiceUrl}
-                              duration={20}
-                              isMe={false}
-                              className="w-full max-w-md shadow-md border border-zinc-200 dark:border-zinc-700"
-                              onEnded={() => setHasVoiceEnded(true)}
-                            />
+                            <div className="bg-white/80 dark:bg-zinc-900/80 p-1.5 rounded-2xl shadow-sm border border-amber-100 dark:border-amber-900/30 backdrop-blur-sm">
+                              <VoiceMessageBubble
+                                audioSrc={cashOnRulesSellerInfo.voiceUrl}
+                                duration={20}
+                                isMe={false}
+                                className="w-full"
+                                onEnded={() => setHasVoiceEnded(true)}
+                              />
+                            </div>
                           </div>
 
-                          {/* Instruction text & links */}
-                          <div className="space-y-4 pt-2">
-                            <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/40 dark:to-zinc-900 border-2 border-amber-300/60 dark:border-amber-700/40 p-4 rounded-2xl space-y-3 font-['Hind_Siliguri',sans-serif] text-zinc-800 dark:text-zinc-200">
-                              <div className="flex items-center gap-2 font-bold text-amber-700 dark:text-amber-400 text-base">
-                                <Shield className="w-5 h-5 text-amber-600 shrink-0" />
+                          {/* Instructions Body */}
+                          <div className="p-5 sm:p-6 space-y-6 font-['Hind_Siliguri',sans-serif]">
+                            
+                            <div className="space-y-4">
+                              <h4 className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                <Shield className="w-5 h-5 text-indigo-500" />
                                 <span>অর্ডার কনফার্ম করার নিয়মাবলি</span>
+                              </h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm mb-3">
+                                    1
+                                  </div>
+                                  <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">
+                                    বিকাশ বা নগদে ফোনের দাম (<span className="font-bold text-indigo-600 dark:text-indigo-400">৳{subtotal}</span>) এবং ডেলিভারি চার্জ (<span className="font-bold text-amber-600 dark:text-amber-400">৳150</span>) ডিপোজিট করে রাখুন।
+                                  </p>
+                                </div>
+                                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                  <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm mb-3">
+                                    2
+                                  </div>
+                                  <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">
+                                    অফিশিয়াল পেমেন্ট গেটওয়ের মাধ্যমে আপনার থেকে <span className="font-bold">মাত্র ৳১৫০</span> ডেলিভারি চার্জ নেওয়া হবে।
+                                  </p>
+                                </div>
+                                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 md:col-span-2">
+                                  <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm mb-3">
+                                    3
+                                  </div>
+                                  <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">
+                                    ডিপোজিট সম্পন্ন করে স্ক্রিন রেকর্ড করে নিচের মেসেজ বাটনে ক্লিক করে <span className="font-bold text-blue-600 dark:text-blue-400">Telegram</span> বা <span className="font-bold text-green-600 dark:text-green-400">WhatsApp</span>-এ পাঠালে আপনার অর্ডারটি ফাইনাল কনফার্ম হবে।
+                                  </p>
+                                </div>
                               </div>
-
-                              <p className="text-sm leading-relaxed font-medium">
-                                আপনার অর্ডার করার জন্য বিকাশ বা নগদে ফোনের দাম (<span className="font-bold text-indigo-600 dark:text-indigo-400">৳{subtotal}</span>) এবং ডেলিভারি চার্জ (<span className="font-bold text-amber-600 dark:text-amber-400">৳150</span>) ডিপোজিট করে রাখুন।
-                              </p>
-
-                              <div className="bg-white/90 dark:bg-zinc-800/90 p-3 rounded-xl border border-amber-200 dark:border-zinc-700 text-xs font-medium space-y-1">
-                                <p className="text-zinc-900 dark:text-zinc-100 font-bold">
-                                  💡 অফিশিয়াল পেমেন্ট গেটওয়ের মাধ্যমে আপনার থেকে মাত্র ৳১৫০ ডেলিভারি চার্জ নেওয়া হবে।
-                                </p>
-                                <p className="text-zinc-600 dark:text-zinc-300">
-                                  ডিপোজিট সম্পন্ন করে স্ক্রিন রেকর্ড করে মেসেজে Telegram বা WhatsApp-এ পাঠালে আপনার অর্ডারটি ফাইনাল কনফার্ম হবে।
-                                </p>
-                              </div>
-
-                              {(cashOnRulesSellerInfo.bkash || cashOnRulesSellerInfo.nagad || sellerPaymentNumbers) && (
-                                <div className="pt-1 flex flex-wrap gap-2 text-xs font-mono">
+                            </div>
+                              
+                            {(cashOnRulesSellerInfo.bkash || cashOnRulesSellerInfo.nagad || sellerPaymentNumbers) && (
+                              <div className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 border border-zinc-200 dark:border-zinc-700">
+                                <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Deposit Numbers</span>
+                                <div className="flex flex-wrap justify-center gap-2">
                                   {(cashOnRulesSellerInfo.bkash || sellerPaymentNumbers?.bkash) && (
-                                    <div className="bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 px-3 py-1.5 rounded-lg border border-pink-300/50 font-bold">
-                                      bKash: {cashOnRulesSellerInfo.bkash || sellerPaymentNumbers?.bkash}
+                                    <div className="bg-white dark:bg-zinc-900 text-pink-600 dark:text-pink-400 px-4 py-2 rounded-xl shadow-sm border border-pink-100 dark:border-pink-900/30 font-mono font-bold text-sm">
+                                      <span className="text-xs text-zinc-400 mr-2 uppercase tracking-wide">bKash</span>
+                                      {cashOnRulesSellerInfo.bkash || sellerPaymentNumbers?.bkash}
                                     </div>
                                   )}
                                   {(cashOnRulesSellerInfo.nagad || sellerPaymentNumbers?.nagad) && (
-                                    <div className="bg-orange-100 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 px-3 py-1.5 rounded-lg border border-orange-300/50 font-bold">
-                                      Nagad: {cashOnRulesSellerInfo.nagad || sellerPaymentNumbers?.nagad}
+                                    <div className="bg-white dark:bg-zinc-900 text-orange-600 dark:text-orange-400 px-4 py-2 rounded-xl shadow-sm border border-orange-100 dark:border-orange-900/30 font-mono font-bold text-sm">
+                                      <span className="text-xs text-zinc-400 mr-2 uppercase tracking-wide">Nagad</span>
+                                      {cashOnRulesSellerInfo.nagad || sellerPaymentNumbers?.nagad}
                                     </div>
                                   )}
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
 
                             {/* Direct Message Action Buttons */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
                               <a
-                                href="https://t.me/deepshopback"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => {
-                                  ensureCashOnRulesOrderCreated();
+                                href={cashOnRulesSellerInfo.telegram ? (cashOnRulesSellerInfo.telegram.startsWith('http') ? cashOnRulesSellerInfo.telegram : `https://t.me/${cashOnRulesSellerInfo.telegram}`) : "https://t.me/deepshopback"}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  ensureCashOnRulesOrderCreated().then(() => {
+                                    window.open(cashOnRulesSellerInfo.telegram ? (cashOnRulesSellerInfo.telegram.startsWith('http') ? cashOnRulesSellerInfo.telegram : `https://t.me/${cashOnRulesSellerInfo.telegram}`) : "https://t.me/deepshopback", "_blank");
+                                  });
                                 }}
-                                className="flex items-center justify-center gap-2.5 bg-[#229ED9] hover:bg-[#1f8fbd] text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+                                className="group relative flex items-center justify-center gap-3 bg-gradient-to-br from-[#2AABEE] to-[#229ED9] hover:from-[#229ED9] hover:to-[#1C88BA] text-white py-4 px-6 rounded-2xl font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-95 overflow-hidden"
                               >
-                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                                <svg className="w-5 h-5 fill-current relative z-10" viewBox="0 0 24 24">
                                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .54-1.43.53-.47-.01-1.37-.27-2.04-.49-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.99-3.02 8.39-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.42 0 .06.01.19 0 .28z"/>
                                 </svg>
-                                Message in Telegram
+                                <span className="relative z-10">Send via Telegram</span>
                               </a>
 
                               <a
-                                href="https://wa.me/17247648185"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={() => {
-                                  ensureCashOnRulesOrderCreated();
+                                href={cashOnRulesSellerInfo.whatsapp ? (cashOnRulesSellerInfo.whatsapp.startsWith('http') ? cashOnRulesSellerInfo.whatsapp : `https://wa.me/${cashOnRulesSellerInfo.whatsapp.replace(/[^0-9]/g, '')}`) : "https://wa.me/17247648185"}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  ensureCashOnRulesOrderCreated().then(() => {
+                                    window.open(cashOnRulesSellerInfo.whatsapp ? (cashOnRulesSellerInfo.whatsapp.startsWith('http') ? cashOnRulesSellerInfo.whatsapp : `https://wa.me/${cashOnRulesSellerInfo.whatsapp.replace(/[^0-9]/g, '')}`) : "https://wa.me/17247648185", "_blank");
+                                  });
                                 }}
-                                className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white py-3.5 px-5 rounded-2xl font-bold text-sm shadow-md transition-all active:scale-95 cursor-pointer"
+                                className="group relative flex items-center justify-center gap-3 bg-gradient-to-br from-[#25D366] to-[#128C7E] hover:from-[#128C7E] hover:to-[#075E54] text-white py-4 px-6 rounded-2xl font-bold text-sm shadow-md shadow-green-500/20 transition-all active:scale-95 overflow-hidden"
                               >
-                                <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                                <svg className="w-5 h-5 fill-current relative z-10" viewBox="0 0 24 24">
                                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
                                 </svg>
-                                Message in WhatsApp
+                                <span className="relative z-10">Send via WhatsApp</span>
                               </a>
                             </div>
+                            
+                            {/* Realtime Status Indicator */}
+                            {pendingCashOnRulesOrderId && (
+                              <div className={cn(
+                                "mt-6 p-6 rounded-2xl border-2 flex flex-col items-center justify-center text-center space-y-3 transition-colors duration-500",
+                                cashOnRulesApprovedBySeller 
+                                  ? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30" 
+                                  : "bg-amber-50 dark:bg-amber-950/20 border-amber-500/30"
+                              )}>
+                                {cashOnRulesApprovedBySeller ? (
+                                  <>
+                                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 animate-in zoom-in duration-500">
+                                      <Check className="w-7 h-7" />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-lg font-black text-emerald-700 dark:text-emerald-400">Approved Successfully!</h4>
+                                      <p className="text-sm text-emerald-600/80 dark:text-emerald-500 font-medium mt-1">
+                                        You can now click the "Review Order" button below.
+                                      </p>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/50 text-amber-500 dark:text-amber-400 rounded-full flex items-center justify-center relative">
+                                      <div className="absolute inset-0 rounded-full border-4 border-amber-200 dark:border-amber-800 animate-ping opacity-20" />
+                                      <Loader2 className="w-7 h-7 animate-spin" />
+                                    </div>
+                                    <div>
+                                      <h4 className="text-lg font-black text-amber-700 dark:text-amber-400">Waiting for Approval...</h4>
+                                      <p className="text-sm text-amber-600/80 dark:text-amber-500 font-medium mt-1">
+                                        Please wait while our team reviews your message.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+
                           </div>
                         </div>
                       )}

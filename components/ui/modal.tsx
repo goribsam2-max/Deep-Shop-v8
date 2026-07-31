@@ -160,11 +160,18 @@ const ModalActions = ({ children, className }: { children: React.ReactNode, clas
   </footer>
 );
 const ModalAction = (props: ButtonProps) => {
-  const { variant, className, ...rest } = props;
+  const { variant, className, onClick, ...rest } = props;
+  
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onClick) onClick(e);
+  };
+
   if (variant === "unstyled") {
-     return <Button {...rest} variant="styled" className={clsx("w-auto px-6 py-2.5 h-11 text-[13px] rounded-xl font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 transition-all flex items-center justify-center shrink-0 border-none", className)}>{props.children}</Button>;
+     return <Button {...rest} onClick={handleClick} variant="styled" className={clsx("w-auto px-6 py-2.5 h-11 text-[13px] rounded-xl font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 active:scale-95 transition-all flex items-center justify-center shrink-0 border-none", className)}>{props.children}</Button>;
   }
-  return <Button {...rest} variant="styled" className={clsx("flex-1 h-11 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-[13px] rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center border-none", className)}>{props.children}</Button>;
+  return <Button {...rest} onClick={handleClick} variant="styled" className={clsx("flex-1 h-11 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold text-[13px] rounded-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center border-none", className)}>{props.children}</Button>;
 };
 
 export const Modal = {

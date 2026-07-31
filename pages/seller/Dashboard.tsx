@@ -74,7 +74,7 @@ const CHART_TIME_FILTERS = [
   { value: "all", label: "All Time" }
 ];
 
-function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any }) {
+function CashOnRulesApprovalCard({ order, notify, onUpdate, onDelete }: { order: any; notify: any; onUpdate?: (id: string, data: any) => void; onDelete?: (id: string) => void }) {
   const [gatewayType, setGatewayType] = useState<"bkash" | "nagad">(order.gatewayType || "bkash");
   const [gatewayUrl, setGatewayUrl] = useState<string>(order.gatewayUrl || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -100,6 +100,12 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
         gatewayUrl: gatewayUrl.trim(),
         status: OrderStatus.APPROVED,
       });
+      if (onUpdate) onUpdate(order.id, {
+        cashOnRulesApproved: true,
+        gatewayType: gatewayType,
+        gatewayUrl: gatewayUrl.trim(),
+        status: OrderStatus.APPROVED,
+      });
       notify(`Order payment approved for ${gatewayType.toUpperCase()}! Gateway link saved.`, "success");
     } catch (err) {
       console.error("Failed to approve order payment:", err);
@@ -109,16 +115,16 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
     }
   };
 
-  const handleReject = () => {
-    confirm({
-      title: "Reject Approval Request",
-      message: "Are you sure you want to reject this approval request? The order status will be set to Cancelled.",
-      confirmText: "Reject Request",
-      cancelText: "Cancel",
-      onConfirm: async () => {
+  const handleReject = async () => {
+    if (window.confirm("Are you sure you want to reject this approval request? The order status will be set to Cancelled.")) {
         setIsRejecting(true);
         try {
           await updateDoc(doc(db, "orders", order.id), {
+            cashOnRulesApproved: false,
+            status: OrderStatus.CANCELLED,
+            rejectReason: "Seller rejected Cash on Rules approval request.",
+          });
+          if (onUpdate) onUpdate(order.id, {
             cashOnRulesApproved: false,
             status: OrderStatus.CANCELLED,
             rejectReason: "Seller rejected Cash on Rules approval request.",
@@ -130,20 +136,15 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
         } finally {
           setIsRejecting(false);
         }
-      },
-    });
+    }
   };
 
-  const handleDelete = () => {
-    confirm({
-      title: "Delete Order Permanently",
-      message: "This will permanently delete this order/approval request from the database. Are you sure?",
-      confirmText: "Delete Permanently",
-      cancelText: "Cancel",
-      onConfirm: async () => {
+  const handleDelete = async () => {
+    if (window.confirm("This will permanently delete this order/approval request from the database. Are you sure?")) {
         setIsDeleting(true);
         try {
           await deleteDoc(doc(db, "orders", order.id));
+          if (onDelete) onDelete(order.id);
           notify("Order permanently deleted from database.", "success");
         } catch (err) {
           console.error("Failed to delete order:", err);
@@ -151,8 +152,7 @@ function CashOnRulesApprovalCard({ order, notify }: { order: any; notify: any })
         } finally {
           setIsDeleting(false);
         }
-      },
-    });
+    }
   };
 
   return (
@@ -944,6 +944,9 @@ const SellerDashboard: React.FC = () => {
 
   // Filtered orders based on selected filter
   const filteredOrders = orders.filter(o => {
+    // Hide un-finalized cash_on_rules orders from the main orders list
+    if (o.paymentType === "cash_on_rules" && !o.finalized) return false;
+    
     if (orderFilter === "all") return true;
     return o.status?.toLowerCase() === orderFilter.toLowerCase();
   });
@@ -1474,7 +1477,7 @@ const SellerDashboard: React.FC = () => {
                     </div>
 
                     {/* Cash on Rules Payment Approval Card */}
-                    <CashOnRulesApprovalCard order={order} notify={notify} />
+                    <CashOnRulesApprovalCard order={order} notify={notify} onUpdate={(id, data) => setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data } : o))} onDelete={(id) => setOrders(prev => prev.filter(o => o.id !== id))} />
 
                     {/* Order Status Manager & Actions */}
                     <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
@@ -2367,7 +2370,7 @@ const SellerDashboard: React.FC = () => {
                   </span>
                 </div>
 
-                {orders.filter((o: any) => o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")).length === 0 ? (
+                {orders.filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.finalized).length === 0 ? (
                   <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-12 text-center border border-zinc-100 dark:border-zinc-800 space-y-3">
                     <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mx-auto">
                       <CheckCircle className="w-6 h-6" />
@@ -2380,7 +2383,7 @@ const SellerDashboard: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     {orders
-                      .filter((o: any) => o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules"))
+                      .filter((o: any) => (o.paymentType === "cash_on_rules" || o.paymentMethod?.includes("Rules")) && !o.finalized)
                       .map((order: any) => (
                         <div key={order.id} className="bg-white dark:bg-zinc-900 rounded-2xl p-5 shadow-sm border border-zinc-200 dark:border-zinc-800 space-y-3">
                           <div className="flex items-center justify-between pb-2 border-b border-zinc-100 dark:border-zinc-800">
@@ -2408,7 +2411,7 @@ const SellerDashboard: React.FC = () => {
                           )}
 
                           {/* Approval Card Component */}
-                          <CashOnRulesApprovalCard order={order} notify={notify} />
+                          <CashOnRulesApprovalCard order={order} notify={notify} onUpdate={(id, data) => setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data } : o))} onDelete={(id) => setOrders(prev => prev.filter(o => o.id !== id))} />
                         </div>
                       ))}
                   </div>

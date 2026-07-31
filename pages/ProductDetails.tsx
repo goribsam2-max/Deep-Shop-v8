@@ -756,6 +756,10 @@ const ProductDetails: React.FC = () => {
       description:
         product.description || `Buy ${product.name} at DEEP SHOP premium store.`,
       sku: product.id,
+      brand: {
+        "@type": "Brand",
+        name: product.brand || "DEEP SHOP"
+      },
       offers: {
         "@type": "Offer",
         url: window.location.href,
@@ -766,6 +770,41 @@ const ProductDetails: React.FC = () => {
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
         itemCondition: "https://schema.org/NewCondition",
+        hasMerchantReturnPolicy: {
+          "@type": "MerchantReturnPolicy",
+          applicableCountry: "BD",
+          returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+          merchantReturnDays: 7,
+          returnMethod: "https://schema.org/ReturnByMail",
+          returnFees: "https://schema.org/ReturnFeesCustomerResponsibility"
+        },
+        shippingDetails: {
+          "@type": "OfferShippingDetails",
+          shippingRate: {
+            "@type": "MonetaryAmount",
+            value: 150,
+            currency: "BDT"
+          },
+          shippingDestination: {
+            "@type": "DefinedRegion",
+            addressCountry: "BD"
+          },
+          deliveryTime: {
+            "@type": "ShippingDeliveryTime",
+            handlingTime: {
+              "@type": "QuantitativeValue",
+              minValue: 0,
+              maxValue: 1,
+              unitCode: "DAY"
+            },
+            transitTime: {
+              "@type": "QuantitativeValue",
+              minValue: 1,
+              maxValue: 5,
+              unitCode: "DAY"
+            }
+          }
+        }
       },
       ...(product.rating && product.numReviews
         ? {
@@ -1221,7 +1260,7 @@ const ProductDetails: React.FC = () => {
                   leftIcon="shield-alt"
                   leftLabel="100% Authentic"
                 />
-                {((product as any).advanceAmount !== undefined && (product as any).advanceAmount !== null && (product as any).advanceAmount !== "") || (sellerInfo?.defaultAdvanceAmount !== undefined && sellerInfo?.defaultAdvanceAmount !== null && sellerInfo?.defaultAdvanceAmount !== "") ? (
+                {!(sellerInfo?.cashOnRulesActive || settings?.cashOnRulesActive) && (((product as any).advanceAmount !== undefined && (product as any).advanceAmount !== null && (product as any).advanceAmount !== "") || (sellerInfo?.defaultAdvanceAmount !== undefined && sellerInfo?.defaultAdvanceAmount !== null && sellerInfo?.defaultAdvanceAmount !== "")) ? (
                   <StatusBadge
                     leftIcon="shield-alt"
                     leftLabel={`৳${(product as any).advanceAmount !== undefined && (product as any).advanceAmount !== null && (product as any).advanceAmount !== "" ? (product as any).advanceAmount : sellerInfo?.defaultAdvanceAmount} Booking Fee`}
